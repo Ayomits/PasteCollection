@@ -27,6 +27,6 @@ func ConnectRoutes(app *fiber.App) {
 	authService := services.NewAuthService(configService)
 	authController := controllers.NewAuthController(authService)
 
-	auth := api.Group("/users")
+	auth := api.Group("/auth")
 	auth.Post("/register", authController.Register)
 }
