@@ -19,7 +19,7 @@ func NewFiberApp() *fiber.App {
 	return app
 }
 
-func ConnectRouters(app *fiber.App) {
+func ConnectRoutes(app *fiber.App) {
 	configService := services.NewConfigService()
 
 	api := app.Group("/api").Use(middlewares.New(configService))
