@@ -1,4 +1,4 @@
-package formatter
+package validators
 
 import (
 	"api/internal/responses"
@@ -9,7 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type ValidationFormatter interface {
+type AppValidator interface {
 	Validate(body any) *responses.ValidationError
 }
 
@@ -17,9 +17,9 @@ type validationFormatter struct {
 	validate *validator.Validate
 }
 
-func NewValidationFormatter(v *validator.Validate) ValidationFormatter {
+func NewAppValidator() AppValidator {
 	return &validationFormatter{
-		validate: v,
+		validate: validator.New(),
 	}
 }
 
@@ -76,3 +76,5 @@ func (f *validationFormatter) formatErrorMessage(fieldErr validator.FieldError, 
 		return fmt.Sprintf("Validation failed for field %s", fiedName)
 	}
 }
+
+var AppValidatorInstance AppValidator = NewAppValidator()

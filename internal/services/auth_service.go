@@ -2,9 +2,8 @@ package services
 
 import (
 	"api/internal/dtos"
-	"api/internal/formatter"
+	"api/internal/services/validators"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -13,15 +12,12 @@ type AuthService interface {
 }
 
 type authService struct {
-	configService       ConfigService
-	validationFormatter formatter.ValidationFormatter
+	configService ConfigService
+	v             validators.AppValidator
 }
 
 func NewAuthService(configService ConfigService) AuthService {
-	v := validator.New()
-	vf := formatter.NewValidationFormatter(v)
-	dtos.RegisterCustomValidations(v)
-	return &authService{configService: configService, validationFormatter: vf}
+	return &authService{configService: configService, v: validators.AppValidatorInstance}
 }
 
 func (s *authService) Register(ctx *fiber.Ctx) error {
@@ -34,7 +30,7 @@ func (s *authService) Register(ctx *fiber.Ctx) error {
 		})
 	}
 
-	err := s.validationFormatter.Validate(req)
+	err := s.v.Validate(req)
 
 	if err != nil {
 		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(err)
