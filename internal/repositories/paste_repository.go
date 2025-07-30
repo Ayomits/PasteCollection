@@ -90,6 +90,20 @@ func (p *pasteRepository) Search(query dtos.PastesSearchQueryDto) (*[]models.Pas
 		sql.Where("EXISTS (" + subQuery.String() + ")")
 	}
 
+	orderBy := "ASC"
+
+	sql.OrderBy("id")
+	if query.Pagination.Sort != nil {
+		orderBy = *query.Pagination.Sort
+		if orderBy == "DESC" {
+			sql.Desc()
+		} else {
+			sql.Asc()
+		}
+	} else {
+		sql.Desc()
+	}
+
 	queryStr, args := sql.Build()
 	rows, err := p.pool.Query(context.Background(), queryStr, args...)
 	if err != nil {
