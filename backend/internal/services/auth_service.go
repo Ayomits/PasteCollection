@@ -34,5 +34,5 @@ func (s *authService) Register(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(err)
 	}
 
-	return ctx.Status(201).JSON(req)
+	return ctx.Status(fiber.StatusCreated).JSON(req)
 }

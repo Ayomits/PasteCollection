@@ -1,2 +1,5 @@
-.env
-vendor
+**/.env
+**/vendor
+**/node_modules
+**/dist
+**/.pnpm_store
