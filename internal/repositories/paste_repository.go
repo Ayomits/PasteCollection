@@ -22,7 +22,7 @@ type PasteRepository interface {
 const (
 	FindByTitleStrict   = "SELECT id, title, paste, tags, created_at, updated_at FROM pastes WHERE title=$1"
 	FindByIdStrict      = "SELECT id, title, paste, tags, created_at, updated_at FROM pastes WHERE id=$1"
-	CreatePasteSql      = "INSERT INTO pastes (title, paste, tags) VALUES($1, $2, $3) RETURNING id, title, paste, created_at, updated_at"
+	CreatePasteSql      = "INSERT INTO pastes (title, paste, tags) VALUES($1, $2, $3) RETURNING id, title, paste, tags, created_at, updated_at"
 	UpdateByIdSql       = "UPDATE pastes SET title=$1,paste=$2,tags=$3 WHERE id=$4 RETURNING id, title, paste, tags, created_at, updated_at"
 	UpdateByTitleSql    = "UPDATE pastes SET title=$1,paste=$2,tags=$3 WHERE title=$4 RETURNING id, title, paste, tags, created_at, updated_at"
 	DeleteByIdStrict    = "DELETE FROM pastes WHERE id=$1"
@@ -102,10 +102,10 @@ func (p *pasteRepository) Delete(criteria string) bool {
 		sql = DeleteByIdStrict
 	}
 
-	err := p.pool.QueryRow(context.Background(), sql, criteria)
+	_, err := p.pool.Query(context.Background(), sql, criteria)
 
-	if err != nil {
-		log.Println(err)
+	if err != nil && !errors.Is(pgx.ErrNoRows, err) {
+		log.Printf("Cannot delete paste with criteria %s: %v", criteria, err)
 		return false
 	}
 	return true

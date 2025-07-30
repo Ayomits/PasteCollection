@@ -12,7 +12,7 @@ import (
 
 type PasteService interface {
 	Create(c *fiber.Ctx) error
-	FindByIdOrTitle(c *fiber.Ctx) error
+	Find(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
 }
@@ -25,7 +25,7 @@ func NewPasteService(r repositories.PasteRepository) PasteService {
 	return &pasteService{pasteRepository: r}
 }
 
-func (p *pasteService) FindByIdOrTitle(c *fiber.Ctx) error {
+func (p *pasteService) Find(c *fiber.Ctx) error {
 	criteria := c.Params("criteria")
 
 	existed, err := p.pasteRepository.Find(criteria)
@@ -142,6 +142,12 @@ func (p *pasteService) Delete(c *fiber.Ctx) error {
 
 	if existed == nil {
 		return c.Status(fiber.StatusNotFound).JSON(responses.NewNotFoundError(fmt.Sprintf(`Paste with criteria "%s" not found`, criteria)))
+	}
+
+	isDeleted := p.pasteRepository.Delete(criteria)
+
+	if !isDeleted {
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Cannot delete paste..."))
 	}
 
 	return c.SendStatus(fiber.StatusNoContent)
