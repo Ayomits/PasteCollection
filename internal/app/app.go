@@ -43,8 +43,8 @@ func ConnectRoutes(app *fiber.App) {
 
 	pastes.Get("/:criteria", pasteController.FindByIdOrTitle)
 	pastes.Post("/", pasteController.CreatePaste)
-	pastes.Delete("/:id", pasteController.DeletePaste)
-	pastes.Put("/:id", pasteController.UpdatePaste)
+	pastes.Put("/:criteria", pasteController.UpdatePaste)
+	pastes.Delete("/:criteria", pasteController.DeletePaste)
 }
 
 func ConnectToDb(configService services.ConfigService) *pgxpool.Pool {

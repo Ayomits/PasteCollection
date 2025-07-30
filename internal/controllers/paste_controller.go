@@ -26,11 +26,11 @@ func (p *pasteController) FindByIdOrTitle(c *fiber.Ctx) error {
 }
 
 func (p *pasteController) DeletePaste(c *fiber.Ctx) error {
-	panic("unimplemented")
+	return p.pasteService.Delete(c)
 }
 
 func (p *pasteController) UpdatePaste(c *fiber.Ctx) error {
-	panic("unimplemented")
+	return p.pasteService.Update(c)
 }
 
 func (p *pasteController) CreatePaste(c *fiber.Ctx) error {
