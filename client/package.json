@@ -24,8 +24,7 @@
   "packageManager": "pnpm@10.13.1",
   "dependencies": {
     "@ts-fetcher/cache": "^1.5.1",
-    "@ts-fetcher/rest": "^1.4.1",
-    "grammy": "^1.37.0"
+    "@ts-fetcher/rest": "^1.4.1"
   },
   "devDependencies": {
     "@ts-fetcher/types": "^1.5.1",
