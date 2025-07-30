@@ -25,7 +25,7 @@ func (s *authService) Register(ctx *fiber.Ctx) error {
 	var req dtos.RegisterUserDto
 
 	if err := ctx.BodyParser(&req); err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(responses.NewInvalidBodyError(err))
+		return ctx.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Invalid body"))
 	}
 
 	err := s.v.Validate(req)
@@ -34,7 +34,5 @@ func (s *authService) Register(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(err)
 	}
 
-	return ctx.Status(201).JSON(fiber.Map{
-		"success": true,
-	})
+	return ctx.Status(201).JSON(req)
 }

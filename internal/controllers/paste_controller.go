@@ -7,6 +7,7 @@ import (
 )
 
 type PasteController interface {
+	FindByIdOrTitle(c *fiber.Ctx) error
 	CreatePaste(c *fiber.Ctx) error
 	DeletePaste(c *fiber.Ctx) error
 	UpdatePaste(c *fiber.Ctx) error
@@ -18,6 +19,10 @@ type pasteController struct {
 
 func NewPasteController(pasteService services.PasteService) PasteController {
 	return &pasteController{pasteService: pasteService}
+}
+
+func (p *pasteController) FindByIdOrTitle(c *fiber.Ctx) error {
+	return p.pasteService.FindByIdOrTitle(c)
 }
 
 func (p *pasteController) DeletePaste(c *fiber.Ctx) error {

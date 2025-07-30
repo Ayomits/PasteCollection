@@ -14,6 +14,6 @@ SELECT
     'down SQL query';
 
 ALTER TABLE pastes
-ADD COLUMN version VARCHAR(32) DEFAULT "1.0.0",
-ADD COLUMN latest BOOLEAN DEFAULT true;
+ADD COLUMN version VARCHAR(32),
+ADD COLUMN latest BOOLEAN;
 -- +goose StatementEnd

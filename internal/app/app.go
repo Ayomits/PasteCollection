@@ -41,6 +41,7 @@ func ConnectRoutes(app *fiber.App) {
 
 	pastes := api.Group("/pastes")
 
+	pastes.Get("/:criteria", pasteController.FindByIdOrTitle)
 	pastes.Post("/", pasteController.CreatePaste)
 	pastes.Delete("/:id", pasteController.DeletePaste)
 	pastes.Put("/:id", pasteController.UpdatePaste)
