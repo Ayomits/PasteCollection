@@ -47,9 +47,9 @@ func ConnectRoutes(app *fiber.App) {
 }
 
 func ConnectToDb(configService services.ConfigService) *pgxpool.Pool {
-	dbUrl, err := configService.Get("DB_URL")
+	dbUrl, err := configService.Get("GOOSE_DBSTRING")
 	if err != nil {
-		panic("Db url is not provided in .env")
+		panic("GOOSE_DBSTRING is not provided in .env")
 	}
 	db := database.NewPostgresDatabase()
 	return db.Connect(dbUrl)

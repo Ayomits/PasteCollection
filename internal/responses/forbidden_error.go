@@ -1,16 +1,16 @@
 package responses
 
 type ForbiddenError struct {
-	Error string `json:error,default="Internal server exception"`
+	Message string `json:"message"`
 }
 
 func NewForbiddenError(err ...string) *ForbiddenError {
 	if len(err) > 0 {
 		return &ForbiddenError{
-			Error: err[0],
+			Message: err[0],
 		}
 	}
 	return &ForbiddenError{
-		Error: "Access denied",
+		Message: "Access denied",
 	}
 }

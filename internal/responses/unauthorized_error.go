@@ -1,16 +1,16 @@
 package responses
 
 type UnauthorizedError struct {
-	Error string `json:error`
+	Message string `json:"message"`
 }
 
 func NewUnauthorizedError(err ...string) *UnauthorizedError {
     if len(err) > 0 {
         return &UnauthorizedError{
-            Error: err[0],
+            Message: err[0],
         }
     }
     return &UnauthorizedError{
-        Error: "Unauthorized",
+        Message: "Unauthorized",
     }
 }
