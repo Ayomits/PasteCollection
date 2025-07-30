@@ -6,7 +6,7 @@ SELECT
 CREATE TABLE
     IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
-        username VARCHAR(32) NOT NULL UNIQUE,
+        username VARCHAR(32) NOT NULL,
         social_id VARCHAR(255) NOT NULL UNIQUE
     );
 

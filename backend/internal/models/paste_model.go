@@ -7,6 +7,7 @@ type PasteModel struct {
 	Title      string    `json:"title"`
 	Tags       []string  `json:"tags"`
 	Paste      string    `json:"paste"`
+	
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

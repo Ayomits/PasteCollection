@@ -237,7 +237,7 @@ func (p *pasteRepository) Create(dto *dtos.PasteDto) (*models.PasteModel, error)
 		var pgError *pgconn.PgError
 		if errors.As(err, &pgError) {
 			switch pgError.Code {
-			case "23505":
+			case enums.DbCodeDuplicateKey:
 				return nil, errors.New("duplicate entry")
 			default:
 				return nil, err
