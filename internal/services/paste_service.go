@@ -4,14 +4,17 @@ import (
 	"api/internal/dtos"
 	"api/internal/repositories"
 	"api/internal/responses"
+	"api/internal/services/querymap"
 	"api/internal/services/validators"
 	"fmt"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 type PasteService interface {
 	Create(c *fiber.Ctx) error
+	Search(c *fiber.Ctx) error
 	Find(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
@@ -23,6 +26,33 @@ type pasteService struct {
 
 func NewPasteService(r repositories.PasteRepository) PasteService {
 	return &pasteService{pasteRepository: r}
+}
+
+func (p *pasteService) Search(c *fiber.Ctx) error {
+	origin := c.BaseURL()
+	path := c.OriginalURL()
+	url := origin + path
+
+	queryObj, err := querymap.FromURLStringToStruct[dtos.PastesSearchQueryDto](url)
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError(err.Error()))
+	}
+
+	violations := validators.AppValidatorInstance.Validate(queryObj)
+
+	if violations != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(violations)
+	}
+
+	results, err, hasNext := p.pasteRepository.Search(*queryObj)
+
+	if err != nil {
+		log.Printf("Error while executing query: %v", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(responses.NewPaginationResponse(results, hasNext))
 }
 
 func (p *pasteService) Find(c *fiber.Ctx) error {
@@ -69,6 +99,15 @@ func (p *pasteService) Create(c *fiber.Ctx) error {
 	}
 
 	paste, err := p.pasteRepository.Create(&req)
+
+	if paste == nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(
+			responses.NewValidationError("Paste with this title already exists", []responses.Violation{
+				*responses.NewViolation("Already exists", "title"),
+			}),
+		)
+	}
+
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(
 			responses.NewInternalError("Failed to create new paste"),
