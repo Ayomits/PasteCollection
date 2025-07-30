@@ -7,10 +7,11 @@ import (
 	"api/internal/utils"
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 
-	"github.com/huandu/go-sqlbuilder"
+	sb "github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -18,22 +19,13 @@ import (
 
 type PasteRepository interface {
 	Search(query dtos.PastesSearchQueryDto) (*[]models.PasteModel, error, bool)
-	Find(criteria string) (*models.PasteModel, error)
+	Find(criteria string, query *dtos.FindByTitleQueryDto) (*models.PasteModel, error)
+	FindById(id int) (*models.PasteModel, error)
+	FindByTitle(value string, strict *bool) (*models.PasteModel, error)
 	Create(dto *dtos.PasteDto) (*models.PasteModel, error)
 	Update(criteria string, dto *dtos.PasteDto) (*models.PasteModel, error)
 	Delete(criteria string) bool
 }
-
-const (
-	SearchSql           = "SELECT id, title, paste, tags, created_at, updated_at FROM pastes WHERE"
-	FindByTitleStrict   = "SELECT id, title, paste, tags, created_at, updated_at FROM pastes WHERE title=$1"
-	FindByIdStrict      = "SELECT id, title, paste, tags, created_at, updated_at FROM pastes WHERE id=$1"
-	CreatePasteSql      = "INSERT INTO pastes (title, paste, tags) VALUES($1, $2, $3) RETURNING id, title, paste, tags, created_at, updated_at"
-	UpdateByIdSql       = "UPDATE pastes SET title=$1,paste=$2,tags=$3 WHERE id=$4 RETURNING id, title, paste, tags, created_at, updated_at"
-	UpdateByTitleSql    = "UPDATE pastes SET title=$1,paste=$2,tags=$3 WHERE title=$4 RETURNING id, title, paste, tags, created_at, updated_at"
-	DeleteByIdStrict    = "DELETE FROM pastes WHERE id=$1"
-	DeleteByTitleStrict = "DELETE FROM pastes WHERE title=$1"
-)
 
 type pasteRepository struct {
 	pool *pgxpool.Pool
@@ -44,7 +36,7 @@ func NewPasteRepository(p *pgxpool.Pool) PasteRepository {
 }
 
 func (p *pasteRepository) Search(query dtos.PastesSearchQueryDto) (*[]models.PasteModel, error, bool) {
-	sql := sqlbuilder.PostgreSQL.NewSelectBuilder()
+	sql := sb.PostgreSQL.NewSelectBuilder()
 	sql.Select("id", "title", "paste", "tags", "created_at", "updated_at")
 	sql.From("pastes")
 
@@ -52,7 +44,7 @@ func (p *pasteRepository) Search(query dtos.PastesSearchQueryDto) (*[]models.Pas
 	if query.Pagination != nil && query.Pagination.Limit != nil {
 		limit = *query.Pagination.Limit
 	}
-	sql.Limit(limit)
+	sql.Limit(limit + 1)
 
 	if query.Pagination != nil && query.Pagination.StartFrom != nil {
 		if query.Pagination.Order != nil && *query.Pagination.Order == enums.PaginationPrev {
@@ -75,8 +67,8 @@ func (p *pasteRepository) Search(query dtos.PastesSearchQueryDto) (*[]models.Pas
 			likePattern := "%" + searchTerm + "%"
 			sql.Where(
 				sql.Or(
-					sql.Like("LOWER(paste)", "LOWER("+sql.Var(likePattern)+")"),
-					sql.Like("LOWER(title)", "LOWER("+sql.Var(likePattern)+")"),
+					sql.Like("paste", likePattern),
+					sql.Like("title", likePattern),
 				),
 			)
 		}
@@ -84,7 +76,7 @@ func (p *pasteRepository) Search(query dtos.PastesSearchQueryDto) (*[]models.Pas
 
 	if query.Filter != nil && query.Filter.Tags != nil && len(*query.Filter.Tags) > 0 {
 		tags := *query.Filter.Tags
-		subQuery := sqlbuilder.PostgreSQL.NewSelectBuilder()
+		subQuery := sb.PostgreSQL.NewSelectBuilder()
 		subQuery.Select("1")
 		subQuery.From("unnest(tags) AS elem")
 
@@ -122,23 +114,31 @@ func (p *pasteRepository) Search(query dtos.PastesSearchQueryDto) (*[]models.Pas
 		pastes = append(pastes, paste)
 	}
 
-	hasNext := len(pastes) == limit
+	hasNext := len(pastes) > limit
 
 	return &pastes, nil, hasNext
 }
 
-func (p *pasteRepository) Find(value string) (*models.PasteModel, error) {
-	var paste models.PasteModel
-	var sql string = FindByTitleStrict
-
+func (p *pasteRepository) Find(value string, query *dtos.FindByTitleQueryDto) (*models.PasteModel, error) {
 	if utils.IsNumber(value) {
-		sql = FindByIdStrict
+		return p.FindById(int(utils.Numberize(value)))
 	}
+	return p.FindByTitle(value, &query.Strict)
+}
+
+func (p *pasteRepository) FindById(id int) (*models.PasteModel, error) {
+	var paste models.PasteModel
+	sb := sb.PostgreSQL.NewSelectBuilder()
+	sb.Select("id", "title", "paste", "tags", "created_at", "updated_at")
+	sb.From("pastes")
+	sb.Where(sb.Equal("id", id))
+
+	query, args := sb.Build()
 
 	err := p.pool.QueryRow(
 		context.Background(),
-		sql,
-		value,
+		query,
+		args...,
 	).Scan(
 		&paste.Id,
 		&paste.Title,
@@ -148,12 +148,48 @@ func (p *pasteRepository) Find(value string) (*models.PasteModel, error) {
 		&paste.UpdatedAt,
 	)
 
-	if err != nil && errors.Is(pgx.ErrNoRows, err) {
-		return nil, nil
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
 	}
 
+	return &paste, nil
+}
+
+func (p *pasteRepository) FindByTitle(title string, strict *bool) (*models.PasteModel, error) {
+	var paste models.PasteModel
+	sb := sb.PostgreSQL.NewSelectBuilder()
+	sb.Select("id", "title", "paste", "tags", "created_at", "updated_at")
+	sb.From("pastes")
+
+	if strict != nil && *strict {
+		sb.Where(sb.Equal("title", title))
+	} else {
+		sb.Where(sb.Like("title", title))
+	}
+
+	query, args := sb.Build()
+
+	err := p.pool.QueryRow(
+		context.Background(),
+		query,
+		args...,
+	).Scan(
+		&paste.Id,
+		&paste.Title,
+		&paste.Paste,
+		&paste.Tags,
+		&paste.CreatedAt,
+		&paste.UpdatedAt,
+	)
+
 	if err != nil {
-		return nil, err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("query error: %w", err)
 	}
 
 	return &paste, nil
@@ -161,13 +197,18 @@ func (p *pasteRepository) Find(value string) (*models.PasteModel, error) {
 
 func (p *pasteRepository) Create(dto *dtos.PasteDto) (*models.PasteModel, error) {
 	var paste models.PasteModel
+	sb := sb.PostgreSQL.NewInsertBuilder()
+	sb.InsertInto("pastes")
+	sb.Cols("title", "paste", "tags")
+	sb.Values(dto.Title, dto.Paste, dto.Tags)
+	sb.Returning("id", "title", "paste", "tags", "created_at", "updated_at")
+
+	query, args := sb.Build()
 
 	err := p.pool.QueryRow(
 		context.Background(),
-		CreatePasteSql,
-		dto.Title,
-		dto.Paste,
-		dto.Tags,
+		query,
+		args...,
 	).Scan(
 		&paste.Id,
 		&paste.Title,
@@ -182,31 +223,43 @@ func (p *pasteRepository) Create(dto *dtos.PasteDto) (*models.PasteModel, error)
 		if errors.As(err, &pgError) {
 			switch pgError.Code {
 			case "23505":
-				return nil, nil
+				return nil, errors.New("duplicate entry")
 			default:
-				return nil, nil
+				return nil, err
 			}
 		}
+		return nil, err
 	}
 
 	return &paste, nil
 }
 
 func (p *pasteRepository) Update(criteria string, dto *dtos.PasteDto) (*models.PasteModel, error) {
-	var paste models.PasteModel
-	var sql string = UpdateByTitleSql
-
 	if utils.IsNumber(criteria) {
-		sql = UpdateByIdSql
+		return p.UpdateById(int(utils.Numberize(criteria)), dto)
 	}
+	return p.UpdateByTitle(criteria, dto)
+}
+
+func (p *pasteRepository) UpdateById(id int, dto *dtos.PasteDto) (*models.PasteModel, error) {
+	var paste models.PasteModel
+	sb := sb.PostgreSQL.NewUpdateBuilder()
+	sb.Update("pastes")
+	sb.Set(
+		sb.Assign("title", dto.Title),
+		sb.Assign("paste", dto.Paste),
+		sb.Assign("tags", dto.Tags),
+		sb.Assign("updated_at", "NOW()"),
+	)
+	sb.Where(sb.Equal("id", id))
+	sb.Returning("id", "title", "paste", "tags", "created_at", "updated_at")
+
+	query, args := sb.Build()
 
 	err := p.pool.QueryRow(
 		context.Background(),
-		sql,
-		dto.Title,
-		dto.Paste,
-		dto.Tags,
-		criteria,
+		query,
+		args...,
 	).Scan(
 		&paste.Id,
 		&paste.Title,
@@ -216,8 +269,48 @@ func (p *pasteRepository) Update(criteria string, dto *dtos.PasteDto) (*models.P
 		&paste.UpdatedAt,
 	)
 
-	if err != nil && !errors.Is(pgx.ErrNoRows, err) {
-		log.Printf("Update paste failed: %v", err)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &paste, nil
+}
+
+func (p *pasteRepository) UpdateByTitle(title string, dto *dtos.PasteDto) (*models.PasteModel, error) {
+	var paste models.PasteModel
+	sb := sb.PostgreSQL.NewUpdateBuilder()
+	sb.Update("pastes")
+	sb.Set(
+		sb.Assign("title", dto.Title),
+		sb.Assign("paste", dto.Paste),
+		sb.Assign("tags", dto.Tags),
+		sb.Assign("updated_at", "NOW()"),
+	)
+	sb.Where(sb.Equal("title", title))
+	sb.Returning("id", "title", "paste", "tags", "created_at", "updated_at")
+
+	query, args := sb.Build()
+
+	err := p.pool.QueryRow(
+		context.Background(),
+		query,
+		args...,
+	).Scan(
+		&paste.Id,
+		&paste.Title,
+		&paste.Paste,
+		&paste.Tags,
+		&paste.CreatedAt,
+		&paste.UpdatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -225,16 +318,37 @@ func (p *pasteRepository) Update(criteria string, dto *dtos.PasteDto) (*models.P
 }
 
 func (p *pasteRepository) Delete(criteria string) bool {
-	var sql string = DeleteByTitleStrict
-
 	if utils.IsNumber(criteria) {
-		sql = DeleteByIdStrict
+		return p.DeleteById(int(utils.Numberize(criteria)))
 	}
+	return p.DeleteByTitle(criteria)
+}
 
-	_, err := p.pool.Query(context.Background(), sql, criteria)
+func (p *pasteRepository) DeleteByTitle(criteria string) bool {
+	sb := sb.PostgreSQL.NewDeleteBuilder()
+	sb.DeleteFrom("pastes")
+	sb.Where(sb.Equal("title", criteria))
 
-	if err != nil && !errors.Is(pgx.ErrNoRows, err) {
+	query, args := sb.Build()
+
+	_, err := p.pool.Exec(context.Background(), query, args...)
+	if err != nil {
 		log.Printf("Cannot delete paste with criteria %s: %v", criteria, err)
+		return false
+	}
+	return true
+}
+
+func (p *pasteRepository) DeleteById(id int) bool {
+	sb := sb.PostgreSQL.NewDeleteBuilder()
+	sb.DeleteFrom("pastes")
+	sb.Where(sb.Equal("id", id))
+
+	query, args := sb.Build()
+
+	_, err := p.pool.Exec(context.Background(), query, args...)
+	if err != nil {
+		log.Printf("Cannot delete paste with id %d: %v", id, err)
 		return false
 	}
 	return true

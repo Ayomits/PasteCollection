@@ -58,7 +58,17 @@ func (p *pasteService) Search(c *fiber.Ctx) error {
 func (p *pasteService) Find(c *fiber.Ctx) error {
 	criteria := c.Params("criteria")
 
-	existed, err := p.pasteRepository.Find(criteria)
+	origin := c.BaseURL()
+	path := c.OriginalURL()
+	url := origin + path
+
+	queryObj, err := querymap.FromURLStringToStruct[dtos.FindByTitleQueryDto](url)
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
+	}
+
+	existed, err := p.pasteRepository.Find(criteria, queryObj)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
@@ -73,7 +83,6 @@ func (p *pasteService) Find(c *fiber.Ctx) error {
 
 func (p *pasteService) Create(c *fiber.Ctx) error {
 	var req dtos.PasteDto
-
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(responses.NewInternalError("Invalid request body"))
 	}
@@ -84,7 +93,7 @@ func (p *pasteService) Create(c *fiber.Ctx) error {
 		)
 	}
 
-	existed, err := p.pasteRepository.Find(req.Title)
+	existed, err := p.pasteRepository.Find(req.Title, dtos.NewFindByTitleQueryDto(true))
 
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(responses.NewInternalError())
@@ -131,7 +140,7 @@ func (p *pasteService) Update(c *fiber.Ctx) error {
 		)
 	}
 
-	existed, err := p.pasteRepository.Find(criteria)
+	existed, err := p.pasteRepository.Find(criteria, dtos.NewFindByTitleQueryDto(true))
 
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(responses.NewInternalError())
@@ -145,7 +154,7 @@ func (p *pasteService) Update(c *fiber.Ctx) error {
 		)
 	}
 
-	existed, err = p.pasteRepository.Find(req.Title)
+	existed, err = p.pasteRepository.Find(req.Title, dtos.NewFindByTitleQueryDto(true))
 
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(responses.NewInternalError())
@@ -173,7 +182,7 @@ func (p *pasteService) Update(c *fiber.Ctx) error {
 func (p *pasteService) Delete(c *fiber.Ctx) error {
 	criteria := c.Params("criteria")
 
-	existed, err := p.pasteRepository.Find(criteria)
+	existed, err := p.pasteRepository.Find(criteria, dtos.NewFindByTitleQueryDto(true))
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
