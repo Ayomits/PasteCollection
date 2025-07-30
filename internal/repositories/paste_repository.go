@@ -64,11 +64,11 @@ func (p *pasteRepository) Search(query dtos.PastesSearchQueryDto) (*[]models.Pas
 				),
 			)
 		} else {
-			likePattern := "%" + searchTerm + "%"
+			likePattern := "%" + strings.ToLower(searchTerm) + "%"
 			sql.Where(
 				sql.Or(
-					sql.Like("paste", likePattern),
-					sql.Like("title", likePattern),
+					sql.Like("LOWER(paste)", likePattern),
+					sql.Like("LOWER(title)", likePattern),
 				),
 			)
 		}
@@ -97,7 +97,7 @@ func (p *pasteRepository) Search(query dtos.PastesSearchQueryDto) (*[]models.Pas
 	}
 	defer rows.Close()
 
-	var pastes []models.PasteModel
+	var pastes []models.PasteModel = []models.PasteModel{}
 	for rows.Next() {
 		var paste models.PasteModel
 		err := rows.Scan(
@@ -165,9 +165,10 @@ func (p *pasteRepository) FindByTitle(title string, strict *bool) (*models.Paste
 	sb.From("pastes")
 
 	if strict != nil && *strict {
-		sb.Where(sb.Equal("title", title))
+		sb.Where(sb.Equal("LOWER(title)", strings.ToLower(title)))
 	} else {
-		sb.Where(sb.Like("title", title))
+		likePattern := "%" + strings.ToLower(title) + "%"
+		sb.Where(sb.Like("LOWER(title)", likePattern))
 	}
 
 	query, args := sb.Build()
