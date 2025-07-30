@@ -4,12 +4,13 @@ import (
 	"api/internal/controllers"
 	"api/internal/database"
 	"api/internal/middlewares"
+	"api/internal/repositories"
 	"api/internal/services"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"gorm.io/gorm"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func NewFiberApp() *fiber.App {
@@ -24,18 +25,28 @@ func NewFiberApp() *fiber.App {
 func ConnectRoutes(app *fiber.App) {
 	configService := services.NewConfigService()
 
-	ConnectToDb(configService)
+	db := ConnectToDb(configService)
 
 	api := app.Group("/api").Use(middlewares.New(configService))
 
 	authService := services.NewAuthService(configService)
 	authController := controllers.NewAuthController(authService)
 
+	pasteRepository := repositories.NewPasteRepository(db)
+	pasteService := services.NewPasteService(pasteRepository)
+	pasteController := controllers.NewPasteController(pasteService)
+
 	auth := api.Group("/auth")
 	auth.Post("/register", authController.Register)
+
+	pastes := api.Group("/pastes")
+
+	pastes.Post("/", pasteController.CreatePaste)
+	pastes.Delete("/:id", pasteController.DeletePaste)
+	pastes.Put("/:id", pasteController.UpdatePaste)
 }
 
-func ConnectToDb(configService services.ConfigService) *gorm.DB {
+func ConnectToDb(configService services.ConfigService) *pgxpool.Pool {
 	dbUrl, err := configService.Get("DB_URL")
 	if err != nil {
 		panic("Db url is not provided in .env")

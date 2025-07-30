@@ -1,22 +1,23 @@
 package database
 
 import (
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	"context"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type PostgresDatabase interface {
-	Connect(dsn string) *gorm.DB
+	Connect(dsn string) *pgxpool.Pool
 }
 
 type postgresDatabase struct{}
 
-func (d *postgresDatabase) Connect(dsn string) *gorm.DB {
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+func (d *postgresDatabase) Connect(dsn string) *pgxpool.Pool {
+	pool, err := pgxpool.New(context.Background(), dsn)
 	if err != nil {
 		panic("Cannot connect to db")
 	}
-	return db
+	return pool
 }
 
 func NewPostgresDatabase() PostgresDatabase {
