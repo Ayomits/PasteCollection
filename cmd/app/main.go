@@ -6,7 +6,7 @@ import (
 
 func main() {
 	fiber := app.NewFiberApp()
-
+	
 	app.ConnectRoutes(fiber)
 
 	fiber.Listen(":8080")

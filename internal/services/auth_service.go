@@ -2,6 +2,7 @@ package services
 
 import (
 	"api/internal/dtos"
+	"api/internal/responses"
 	"api/internal/services/validators"
 
 	"github.com/gofiber/fiber/v2"
@@ -24,10 +25,7 @@ func (s *authService) Register(ctx *fiber.Ctx) error {
 	var req dtos.RegisterUserDto
 
 	if err := ctx.BodyParser(&req); err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error":      "Invalid body",
-			"violations": err,
-		})
+		return ctx.Status(fiber.StatusInternalServerError).JSON(responses.NewInvalidBodyError(err))
 	}
 
 	err := s.v.Validate(req)

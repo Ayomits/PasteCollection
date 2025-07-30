@@ -1,7 +1,7 @@
 package responses
 
 type UnauthorizedError struct {
-	Error string `json:error,default="Unauthorized"`
+	Error string `json:error`
 }
 
 func NewUnauthorizedError(err ...string) *UnauthorizedError {

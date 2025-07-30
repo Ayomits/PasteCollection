@@ -1,7 +1,7 @@
 package responses
 
 type InternalError struct {
-	Error string `json:error,default="Internal server exception"`
+	Error string `json:error`
 }
 
 func NewInternalError(err ...string) *ForbiddenError {
