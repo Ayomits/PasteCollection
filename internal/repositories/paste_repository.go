@@ -95,22 +95,6 @@ func (p *pasteRepository) Create(dto *dtos.PasteDto) (*models.PasteModel, error)
 	return &paste, nil
 }
 
-func (p *pasteRepository) Delete(criteria string) bool {
-	var sql string = DeleteByTitleStrict
-
-	if utils.IsNumber(criteria) {
-		sql = DeleteByIdStrict
-	}
-
-	_, err := p.pool.Query(context.Background(), sql, criteria)
-
-	if err != nil && !errors.Is(pgx.ErrNoRows, err) {
-		log.Printf("Cannot delete paste with criteria %s: %v", criteria, err)
-		return false
-	}
-	return true
-}
-
 func (p *pasteRepository) Update(criteria string, dto *dtos.PasteDto) (*models.PasteModel, error) {
 	var paste models.PasteModel
 	var sql string = UpdateByTitleSql
@@ -141,4 +125,20 @@ func (p *pasteRepository) Update(criteria string, dto *dtos.PasteDto) (*models.P
 	}
 
 	return &paste, nil
+}
+
+func (p *pasteRepository) Delete(criteria string) bool {
+	var sql string = DeleteByTitleStrict
+
+	if utils.IsNumber(criteria) {
+		sql = DeleteByIdStrict
+	}
+
+	_, err := p.pool.Query(context.Background(), sql, criteria)
+
+	if err != nil && !errors.Is(pgx.ErrNoRows, err) {
+		log.Printf("Cannot delete paste with criteria %s: %v", criteria, err)
+		return false
+	}
+	return true
 }
