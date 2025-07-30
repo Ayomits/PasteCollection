@@ -2,10 +2,12 @@ package services
 
 import (
 	"api/internal/dtos"
+	"api/internal/models"
 	"api/internal/repositories"
 	"api/internal/responses"
 	"api/internal/services/querymap"
 	"api/internal/services/validators"
+	"api/internal/utils"
 	"fmt"
 	"log"
 
@@ -68,7 +70,13 @@ func (p *pasteService) Find(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
 	}
 
-	existed, err := p.pasteRepository.Find(criteria, queryObj)
+	var existed *models.PasteModel
+
+	if queryObj.Strict || !utils.IsNumber(criteria) {
+		existed, err = p.pasteRepository.FindByTitle(criteria, &queryObj.Strict)
+	} else {
+		existed, err = p.pasteRepository.FindById(int(utils.Numberize(criteria)))
+	}
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
@@ -130,6 +138,12 @@ func (p *pasteService) Update(c *fiber.Ctx) error {
 	var req dtos.PasteDto
 	criteria := c.Params("criteria")
 
+	origin := c.BaseURL()
+	path := c.OriginalURL()
+	url := origin + path
+
+	queryObj, err := querymap.FromURLStringToStruct[dtos.FindByTitleQueryDto](url)
+
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(responses.NewInternalError("Invalid request body"))
 	}
@@ -140,7 +154,13 @@ func (p *pasteService) Update(c *fiber.Ctx) error {
 		)
 	}
 
-	existed, err := p.pasteRepository.Find(criteria, dtos.NewFindByTitleQueryDto(true))
+	var existed *models.PasteModel
+
+	if queryObj.Strict || !utils.IsNumber(criteria) {
+		existed, err = p.pasteRepository.FindByTitle(criteria, &queryObj.Strict)
+	} else {
+		existed, err = p.pasteRepository.FindById(int(utils.Numberize(criteria)))
+	}
 
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(responses.NewInternalError())
@@ -154,7 +174,7 @@ func (p *pasteService) Update(c *fiber.Ctx) error {
 		)
 	}
 
-	existed, err = p.pasteRepository.Find(req.Title, dtos.NewFindByTitleQueryDto(true))
+	existed, err = p.pasteRepository.FindByTitle(req.Title, &dtos.NewFindByTitleQueryDto(true).Strict)
 
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(responses.NewInternalError())
@@ -182,7 +202,19 @@ func (p *pasteService) Update(c *fiber.Ctx) error {
 func (p *pasteService) Delete(c *fiber.Ctx) error {
 	criteria := c.Params("criteria")
 
-	existed, err := p.pasteRepository.Find(criteria, dtos.NewFindByTitleQueryDto(true))
+	origin := c.BaseURL()
+	path := c.OriginalURL()
+	url := origin + path
+
+	queryObj, err := querymap.FromURLStringToStruct[dtos.FindByTitleQueryDto](url)
+
+	var existed *models.PasteModel
+
+	if queryObj.Strict || !utils.IsNumber(criteria) {
+		existed, err = p.pasteRepository.FindByTitle(criteria, &dtos.NewFindByTitleQueryDto(true).Strict)
+	} else {
+		existed, err = p.pasteRepository.FindById(int(utils.Numberize(criteria)))
+	}
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())

@@ -36,6 +36,16 @@ func ConnectRoutes(app *fiber.App) {
 	pasteService := services.NewPasteService(pasteRepository)
 	pasteController := controllers.NewPasteController(pasteService)
 
+	users := api.Group("/users")
+	userRepository := repositories.NewUserRepository(db)
+	userService := services.NewUserService(userRepository)
+	userController := controllers.NewUserController(userService)
+
+	users.Get("/:criteria", userController.FindById)
+	users.Post("/", userController.Create)
+	users.Put("/:criteria", userController.Update)
+	users.Delete("/:criteria", userController.Delete)
+
 	auth := api.Group("/auth")
 	auth.Post("/register", authController.Register)
 
