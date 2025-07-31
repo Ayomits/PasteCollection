@@ -2,22 +2,19 @@ package services
 
 import (
 	"api/internal/dtos"
-	"api/internal/models"
 	"api/internal/repositories"
 	"api/internal/responses"
 	"api/internal/services/querymap"
 	"api/internal/services/validators"
-	"api/internal/utils"
-	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 type UserService interface {
-	FindUser(c *fiber.Ctx) error
-	CreateUser(c *fiber.Ctx) error
-	UpdateUser(c *fiber.Ctx) error
-	DeleteUser(c *fiber.Ctx) error
+	Find(c *fiber.Ctx) error
+	Create(c *fiber.Ctx) error
+	Update(c *fiber.Ctx) error
+	Delete(c *fiber.Ctx) error
 }
 
 type userService struct {
@@ -28,161 +25,158 @@ func NewUserService(r repositories.UserRepository) UserService {
 	return &userService{userRepository: r}
 }
 
-func (u *userService) FindUser(c *fiber.Ctx) error {
-	criteria := c.Params("criteria")
-	url := c.BaseURL() + c.OriginalURL()
-	queryObj, err := querymap.FromURLStringToStruct[dtos.IsomorphQueryDto](url)
+func (u *userService) Find(c *fiber.Ctx) error {
+	queryObj, err := querymap.FromURLStringToStruct[dtos.UserFiltersDto](c.BaseURL() + c.OriginalURL())
+	if u.isEmptyQuery(queryObj) {
+		return c.Status(fiber.StatusBadRequest).JSON(responses.NewBadRequestError("Query parametrs is empty"))
+	}
 
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Cannot parse query"))
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Cannot parse query parametrs.."))
 	}
 
-	var usr *models.UserModel
+	filterViolations := validators.AppValidatorInstance.Validate(queryObj)
 
-	if queryObj.AsUsername || !utils.IsNumber(criteria) {
-		usr, err = u.userRepository.FindByUsername(criteria)
-	} else {
-		usr, err = u.userRepository.FindById(int(utils.Numberize(criteria)))
+	if filterViolations != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(filterViolations)
 	}
 
-	if usr == nil {
-		return c.Status(fiber.StatusNotFound).JSON(responses.NewNotFoundError(fmt.Sprintf("User with criteria %s not found", criteria)))
+	result, err := u.userRepository.Find(queryObj)
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Error while query to db"))
 	}
 
-	return c.Status(fiber.StatusOK).JSON(usr)
+	if result == nil {
+		return c.Status(fiber.StatusNotFound).JSON(responses.NewNotFoundError("User not found"))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(result)
 }
 
-func (u *userService) CreateUser(c *fiber.Ctx) error {
-	var req dtos.UserDto
+func (u *userService) Create(c *fiber.Ctx) error {
+	var body *dtos.UserDto
 
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Cannot parse body"))
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Cannot parse body..."))
 	}
 
-	violations := validators.AppValidatorInstance.Validate(req)
+	bodyViolations := validators.AppValidatorInstance.Validate(body)
 
-	if violations != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(responses.NewValidationError(violations.Message, violations.Violations))
+	if bodyViolations != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(bodyViolations)
 	}
 
-	existed, err := u.userRepository.FindByUsername(req.Username)
+	strict := true
+	existed, err := u.userRepository.Find(&dtos.UserFiltersDto{
+		Username: &body.Username,
+		SocialId: &body.SocialId,
+		Strict:   &strict,
+	})
 
 	if err != nil {
-		fmt.Println(err)
-		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Cannot find existed user..."))
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Error while query to db"))
 	}
 
 	if existed != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(responses.NewValidationError("User already exists", []responses.Violation{
-			*responses.NewViolation("User already exists", "username"),
-		}))
+		return c.
+			Status(fiber.StatusUnprocessableEntity).
+			JSON(responses.NewValidationError("User already exists", []responses.Violation{
+				*responses.NewViolation("User already exists", "username"),
+				*responses.NewViolation("User already exists", "social_id"),
+			}))
 	}
 
-	usr, err := u.userRepository.Create(&req)
+	newUsr, err := u.userRepository.Create(body)
 
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Cannot create user..."))
-	}
-
-	if usr == nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(responses.NewValidationError("User already exists", []responses.Violation{
-			*responses.NewViolation("User already exists", "username"),
-		}))
-	}
-
-	return c.Status(fiber.StatusCreated).JSON(usr)
+	return c.Status(fiber.StatusOK).JSON(newUsr)
 }
 
-func (u *userService) UpdateUser(c *fiber.Ctx) error {
-	var req dtos.UpdateUserDto
-	criteria := c.Params("criteria")
+func (u *userService) Update(c *fiber.Ctx) error {
+	var body dtos.UpdateUserDto
 
-	url := c.BaseURL() + c.OriginalURL()
-	queryObj, err := querymap.FromURLStringToStruct[dtos.IsomorphQueryDto](url)
-
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Cannot parse body"))
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Cannot parse body..."))
 	}
 
-	violations := validators.AppValidatorInstance.Validate(req)
-
-	if violations != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(responses.NewValidationError(violations.Message, violations.Violations))
+	queryObj, err := querymap.FromURLStringToStruct[dtos.UserFiltersDto](c.BaseURL() + c.OriginalURL())
+	if u.isEmptyQuery(queryObj) {
+		return c.Status(fiber.StatusBadRequest).JSON(responses.NewBadRequestError("Query parametrs is empty"))
 	}
 
-	var oldExisted *models.UserModel
+	filterViolations := validators.AppValidatorInstance.Validate(queryObj)
+	bodyViolations := validators.AppValidatorInstance.Validate(body)
 
-	if queryObj.AsUsername || !utils.IsNumber(criteria) {
-		oldExisted, err = u.userRepository.Find(criteria)
-	} else {
-		oldExisted, err = u.userRepository.FindById(int(utils.Numberize(criteria)))
+	if filterViolations != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(filterViolations)
+	}
+
+	if bodyViolations != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(bodyViolations)
 	}
 
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Cannot find existed user"))
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Cannot parse query parametrs.."))
 	}
 
-	if oldExisted == nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(responses.NewValidationError("User with this criter does not exists", []responses.Violation{
-			*responses.NewViolation("User with this criteria does not exists", "criteria"),
-		}))
-	}
-
-	newExisted, err := u.userRepository.FindByUsername(req.Username)
+	result, err := u.userRepository.Find(queryObj)
 
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Find new existed error..."))
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Error while query to db"))
 	}
 
-	if newExisted != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(responses.NewValidationError("User with this username already exists", []responses.Violation{
-			*responses.NewViolation("User already exists", "username"),
-		}))
+	if result == nil {
+		return c.Status(fiber.StatusNotFound).JSON(responses.NewNotFoundError("User not found"))
 	}
 
-	usr, err := u.userRepository.Update(criteria, &req)
+	newUsr, err := u.userRepository.Update(queryObj, &body)
 
 	if err != nil {
-		fmt.Println(err)
-		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Cannot update user"))
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Error while query to db"))
 	}
 
-	if usr == nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(responses.NewValidationError("User with this username already exists", []responses.Violation{
-			*responses.NewViolation("User with this username already exists", "username"),
-		}))
+	if newUsr == nil {
+		return c.Status(fiber.StatusNotFound).JSON(responses.NewNotFoundError("User not found"))
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(usr)
+	return c.Status(fiber.StatusOK).JSON(newUsr)
 }
 
-func (u *userService) DeleteUser(c *fiber.Ctx) error {
-	criteria := c.Params("criteria")
-
-	url := c.BaseURL() + c.OriginalURL()
-	queryObj, err := querymap.FromURLStringToStruct[dtos.IsomorphQueryDto](url)
-
-	var usr *models.UserModel
-
-	if queryObj.AsUsername || !utils.IsNumber(criteria) {
-		usr, err = u.userRepository.FindByUsername(criteria)
-	} else {
-		usr, err = u.userRepository.FindById(int(utils.Numberize(criteria)))
+func (u *userService) Delete(c *fiber.Ctx) error {
+	queryObj, err := querymap.FromURLStringToStruct[dtos.UserFiltersDto](c.BaseURL() + c.OriginalURL())
+	if u.isEmptyQuery(queryObj) {
+		return c.Status(fiber.StatusBadRequest).JSON(responses.NewBadRequestError("Query parametrs is empty"))
 	}
 
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Cannot parse query parametrs.."))
 	}
 
-	if usr == nil {
-		return c.Status(fiber.StatusNotFound).JSON(responses.NewNotFoundError(fmt.Sprintf("User with criteria %s not found", criteria)))
+	filterViolations := validators.AppValidatorInstance.Validate(queryObj)
+
+	if filterViolations != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(filterViolations)
 	}
 
-	is_deleted := u.userRepository.Delete(criteria)
+	existed, err := u.userRepository.Find(queryObj)
 
-	if !is_deleted {
-		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Cannot delete user..."))
+	if existed == nil {
+		return c.Status(fiber.StatusNotFound).JSON(responses.NewNotFoundError("User not found"))
+	}
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Error while quering existed user"))
+	}
+
+	_, err = u.userRepository.Delete(queryObj)
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Error while deleting user"))
 	}
 
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func (u *userService) isEmptyQuery(q *dtos.UserFiltersDto) bool {
+	return q.DisplayName == nil && q.Id == nil && q.Username == nil && q.SocialId == nil
 }

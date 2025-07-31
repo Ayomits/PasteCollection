@@ -2,32 +2,28 @@ package repositories
 
 import (
 	"api/internal/dtos"
-	"api/internal/enums"
 	"api/internal/models"
-	"api/internal/utils"
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 
-	sb "github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+const (
+	FindUserSql   = "SELECT id, username, display_name, social_id FROM users %s"
+	CreateUserSql = "INSERT INTO users (username, display_name, social_id) VALUES ($1, $2, $3) RETURNING id, username, display_name, social_id"
+	UpdateUserSql = "UPDATE users SET username=$1, display_name=$2 %s RETURNING id, username, display_name, social_id"
+	DeleteUserSql = "DELETE FROM users %s"
+)
+
 type UserRepository interface {
-	Find(criteria string) (*models.UserModel, error)
-	FindById(id int) (*models.UserModel, error)
-	FindByUsername(username string) (*models.UserModel, error)
-
 	Create(dto *dtos.UserDto) (*models.UserModel, error)
-
-	Update(criteria string, dto *dtos.UpdateUserDto) (*models.UserModel, error)
-	UpdateById(id int, dto *dtos.UpdateUserDto) (*models.UserModel, error)
-	UpdateByUsername(username string, dto *dtos.UpdateUserDto) (*models.UserModel, error)
-
-	Delete(criteria string) bool
-	DeleteById(id int) bool
-	DeleteByUsername(username string) bool
+	Find(filter *dtos.UserFiltersDto) (*models.UserModel, error)
+	Update(filter *dtos.UserFiltersDto, dto *dtos.UpdateUserDto) (*models.UserModel, error)
+	Delete(filter *dtos.UserFiltersDto) (bool, error)
 }
 
 type userRepository struct {
@@ -38,59 +34,22 @@ func NewUserRepository(p *pgxpool.Pool) UserRepository {
 	return &userRepository{pool: p}
 }
 
-func (u *userRepository) Find(criteria string) (*models.UserModel, error) {
-	if utils.IsNumber(criteria) {
-		return u.FindById(int(utils.Numberize(criteria)))
-	}
-	return u.FindByUsername(criteria)
-}
-
-func (u *userRepository) FindById(id int) (*models.UserModel, error) {
+func (u *userRepository) Find(filter *dtos.UserFiltersDto) (*models.UserModel, error) {
 	var usr models.UserModel
+	condition, args := u.buildFilters(filter, 0)
 
-	sql := sb.PostgreSQL.NewSelectBuilder()
-	query, args := sql.Select("id", "username", "social_id", "display_name").
-		From("users").
-		Where(sql.Equal("id", id)).
-		Build()
-
-	err := u.pool.QueryRow(context.Background(), query, args...).Scan(
+	err := u.pool.QueryRow(context.Background(), fmt.Sprintf(FindUserSql, condition), args...).Scan(
 		&usr.Id,
 		&usr.Username,
-		&usr.SocialId,
 		&usr.DisplayName,
+		&usr.SocialId,
 	)
 
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
-		}
-		return nil, err
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
 	}
 
-	return &usr, nil
-}
-
-func (u *userRepository) FindByUsername(username string) (*models.UserModel, error) {
-	var usr models.UserModel
-
-	sql := sb.PostgreSQL.NewSelectBuilder()
-	query, args := sql.Select("id", "username", "social_id", "display_name").
-		From("users").
-		Where(sql.Equal("username", username)).
-		Build()
-
-	err := u.pool.QueryRow(context.Background(), query, args...).Scan(
-		&usr.Id,
-		&usr.Username,
-		&usr.SocialId,
-		&usr.DisplayName,
-	)
-
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
-		}
 		return nil, err
 	}
 
@@ -99,144 +58,120 @@ func (u *userRepository) FindByUsername(username string) (*models.UserModel, err
 
 func (u *userRepository) Create(dto *dtos.UserDto) (*models.UserModel, error) {
 	var usr models.UserModel
-	sql := sb.PostgreSQL.NewInsertBuilder()
-	sql.InsertInto("users").Cols("username", "social_id", "display_name").Values(dto.Username, dto.SocialId, dto.DisplayName).Returning("id", "username", "display_name", "social_id")
 
-	query, args := sql.Build()
-
-	err := u.pool.QueryRow(context.Background(), query, args...).Scan(
+	err := u.pool.QueryRow(context.Background(), CreateUserSql, &dto.Username, &dto.DisplayName, &dto.SocialId).Scan(
 		&usr.Id,
 		&usr.Username,
-		&usr.SocialId,
 		&usr.DisplayName,
+		&usr.SocialId,
 	)
 
 	if err != nil {
-		var pgError *pgconn.PgError
-		if errors.As(err, &pgError) {
-			switch pgError.Code {
-			case enums.DbCodeDuplicateKey:
-				return nil, errors.New("duplicate entry")
-			default:
-				return nil, err
-			}
-		}
+		fmt.Println(err)
 		return nil, err
 	}
 
 	return &usr, nil
 }
 
-func (u *userRepository) Update(criteria string, dto *dtos.UpdateUserDto) (*models.UserModel, error) {
-	if utils.IsNumber(criteria) {
-		return u.UpdateById(int(utils.Numberize(criteria)), dto)
-	}
-	return u.UpdateByUsername(criteria, dto)
-}
+func (u *userRepository) Delete(filter *dtos.UserFiltersDto) (bool, error) {
+	condition, args := u.buildFilters(filter, 0)
 
-func (u *userRepository) UpdateById(id int, dto *dtos.UpdateUserDto) (*models.UserModel, error) {
-    var usr models.UserModel
-    sql := sb.PostgreSQL.NewUpdateBuilder()
-    sql.Update("users").
-        Where(sql.Equal("id", id)).
-        Set(
-            sql.Assign("username", dto.Username),
-            sql.Assign("display_name", dto.DisplayName),
-        ).
-        Returning("id", "username", "display_name", "social_id")
+	_, err := u.pool.Query(context.Background(), fmt.Sprintf(DeleteUserSql, condition), args...)
 
-    query, args := sql.Build()
-
-    err := u.pool.QueryRow(context.Background(), query, args...).Scan(
-        &usr.Id,
-        &usr.Username,
-        &usr.DisplayName,
-        &usr.SocialId,
-    )
-
-    if err != nil {
-        var pgError *pgconn.PgError
-        if errors.As(err, &pgError) {
-            switch pgError.Code {
-            case enums.DbCodeDuplicateKey:
-                return nil, errors.New("duplicate entry")
-            default:
-                return nil, err
-            }
-        }
-        return nil, err
-    }
-
-    return &usr, nil
-}
-
-func (u *userRepository) UpdateByUsername(username string, dto *dtos.UpdateUserDto) (*models.UserModel, error) {
-    var usr models.UserModel
-    sql := sb.PostgreSQL.NewUpdateBuilder()
-    sql.Update("users").
-        Where(sql.Equal("username", username)).
-        Set(
-            sql.Assign("username", dto.Username),
-            sql.Assign("display_name", dto.DisplayName),
-        ).
-        Returning("id", "username", "display_name", "social_id")
-
-    query, args := sql.Build()
-
-    err := u.pool.QueryRow(context.Background(), query, args...).Scan(
-        &usr.Id,
-        &usr.Username,
-        &usr.DisplayName,
-        &usr.SocialId,
-    )
-
-    if err != nil {
-        var pgError *pgconn.PgError
-        if errors.As(err, &pgError) {
-            switch pgError.Code {
-            case enums.DbCodeDuplicateKey:
-                return nil, errors.New("duplicate entry")
-            default:
-                return nil, err
-            }
-        }
-        return nil, err
-    }
-
-    return &usr, nil
-}
-
-func (u *userRepository) Delete(criteria string) bool {
-	if utils.IsNumber(criteria) {
-		return u.DeleteById(int(utils.Numberize(criteria)))
-	}
-	return u.DeleteByUsername(criteria)
-}
-
-func (u *userRepository) DeleteById(id int) bool {
-	sb := sb.PostgreSQL.NewDeleteBuilder()
-	sb.DeleteFrom("users")
-	sb.Where(sb.Equal("id", id))
-
-	query, args := sb.Build()
-
-	_, err := u.pool.Exec(context.Background(), query, args...)
 	if err != nil {
-		return false
+		return false, err
 	}
-	return true
+
+	return true, nil
 }
 
-func (u *userRepository) DeleteByUsername(username string) bool {
-	sb := sb.PostgreSQL.NewDeleteBuilder()
-	sb.DeleteFrom("users")
-	sb.Where(sb.Equal("username", username))
+func (u *userRepository) Update(filter *dtos.UserFiltersDto, dto *dtos.UpdateUserDto) (*models.UserModel, error) {
+	var usr models.UserModel
+	condition, args := u.buildFilters(filter, 2)
 
-	query, args := sb.Build()
+	allArgs := make([]interface{}, 0, 2+len(args))
+	allArgs = append(allArgs, &dto.Username, &dto.DisplayName)
+	allArgs = append(allArgs, args...)
 
-	_, err := u.pool.Exec(context.Background(), query, args...)
-	if err != nil {
-		return false
+	fmt.Println(UpdateUserSql + " " + condition)
+
+	err := u.pool.
+		QueryRow(context.Background(), fmt.Sprintf(UpdateUserSql, condition), allArgs...).
+		Scan(
+			&usr.Id,
+			&usr.Username,
+			&usr.DisplayName,
+			&usr.SocialId,
+		)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
 	}
-	return true
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &usr, nil
+}
+
+func (u *userRepository) buildFilters(filter *dtos.UserFiltersDto, startFrom int) (string, []interface{}) {
+	var conditions []string = []string{}
+	var args []any = []any{}
+	var position int = startFrom
+
+	likePattern := func(value string) string {
+		return "%" + value + "%"
+	}
+
+	if filter.Id != nil {
+		position++
+		conditions = append(conditions, fmt.Sprintf("id=$%d", position))
+		args = append(args, filter.Id)
+	}
+
+	if filter.SocialId != nil {
+		position++
+		conditions = append(conditions, fmt.Sprintf("social_id=$%d", position))
+		args = append(args, filter.SocialId)
+	}
+
+	if filter.Username != nil {
+		position++
+		if filter.Strict != nil && *filter.Strict {
+			conditions = append(conditions, fmt.Sprintf("username=$%d", position))
+			args = append(args, filter.Username)
+		} else {
+			conditions = append(conditions, fmt.Sprintf("username LIKE $%d", position))
+			args = append(args, likePattern(*filter.Username))
+		}
+	}
+
+	if filter.DisplayName != nil {
+		position++
+		if filter.Strict != nil && *filter.Strict {
+			conditions = append(conditions, fmt.Sprintf("display_name=$%d", position))
+			args = append(args, filter.Username)
+		} else {
+			conditions = append(conditions, fmt.Sprintf("display_name LIKE $%d", position))
+			args = append(args, likePattern(*filter.Username))
+		}
+	}
+
+	var sign string
+
+	if filter.MatchAll != nil && *filter.MatchAll {
+		sign = "AND"
+	} else {
+		sign = "OR"
+	}
+
+	if len(conditions) > 0 {
+		if len(conditions) == 1 {
+			return "WHERE " + strings.Join(conditions, " "), args
+		}
+		return "WHERE " + strings.Join(conditions, " "+sign+" "), args
+	}
+	return "", args
 }

@@ -2,6 +2,7 @@ package services
 
 import (
 	"api/internal/dtos"
+	"api/internal/repositories"
 	"api/internal/responses"
 	"api/internal/services/validators"
 
@@ -13,12 +14,11 @@ type AuthService interface {
 }
 
 type authService struct {
-	configService ConfigService
-	v             validators.AppValidator
+	userRepository *repositories.UserRepository
 }
 
-func NewAuthService(configService ConfigService) AuthService {
-	return &authService{configService: configService, v: validators.AppValidatorInstance}
+func NewAuthService(r *repositories.UserRepository) AuthService {
+	return &authService{userRepository: r}
 }
 
 func (s *authService) Register(ctx *fiber.Ctx) error {
@@ -28,10 +28,10 @@ func (s *authService) Register(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Invalid body"))
 	}
 
-	err := s.v.Validate(req)
+	violations := validators.AppValidatorInstance.Validate(req)
 
-	if err != nil {
-		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(err)
+	if violations != nil {
+		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(violations)
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(req)

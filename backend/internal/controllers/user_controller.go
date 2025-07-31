@@ -7,8 +7,7 @@ import (
 )
 
 type UserController interface {
-	FindById(c *fiber.Ctx) error
-	FindByUsername(c *fiber.Ctx) error
+	Find(c *fiber.Ctx) error
 	Create(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
@@ -18,26 +17,22 @@ type userController struct {
 	userService services.UserService
 }
 
-func NewUserController(userService services.UserService) UserController {
-	return &userController{userService: userService}
+func NewUserController(s services.UserService) UserController {
+	return &userController{userService: s}
+}
+
+func (u *userController) Find(c *fiber.Ctx) error {
+	return u.userService.Find(c)
 }
 
 func (u *userController) Create(c *fiber.Ctx) error {
-	return u.userService.CreateUser(c)
-}
-
-func (u *userController) Delete(c *fiber.Ctx) error {
-	return u.userService.DeleteUser(c)
-}
-
-func (u *userController) FindById(c *fiber.Ctx) error {
-	return u.userService.FindUser(c)
-}
-
-func (u *userController) FindByUsername(c *fiber.Ctx) error {
-	return u.userService.FindUser(c)
+	return u.userService.Create(c)
 }
 
 func (u *userController) Update(c *fiber.Ctx) error {
-	return u.userService.UpdateUser(c)
+	return u.userService.Update(c)
+}
+
+func (u *userController) Delete(c *fiber.Ctx) error {
+	return u.userService.Delete(c)
 }
