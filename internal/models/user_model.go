@@ -8,6 +8,6 @@ type UserModel struct {
 	DisplayName string `json:"displayName" validate:"omitempty"`
 	SocialId    string `json:"socialId" validate:"omitempty"`
 
-	CreatedAt time.Time `json:"created_at" validate:"omitempty"`
-	UpdatedAt time.Time `json:"updated_at" validate:"omitempty"`
+	CreatedAt time.Time `json:"createdAt" validate:"omitempty"`
+	UpdatedAt time.Time `json:"updatedAt" validate:"omitempty"`
 }

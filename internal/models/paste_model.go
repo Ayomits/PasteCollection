@@ -9,6 +9,6 @@ type PasteModel struct {
 
 	UserId int `db:"user_id" json:"userId" validate:"omitempty"`
 
-	CreatedAt time.Time `db:"created_at" json:"created_at" validate:"omitempty"`
-	UpdatedAt time.Time `db:"updated_at" json:"updated_at" validate:"omitempty"`
+	CreatedAt time.Time `db:"created_at" json:"createdAt" validate:"omitempty"`
+	UpdatedAt time.Time `db:"updated_at" json:"updatedAt" validate:"omitempty"`
 }

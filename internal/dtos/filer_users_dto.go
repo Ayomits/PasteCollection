@@ -8,14 +8,3 @@ type UserFiltersDto struct {
 	MatchAll    *bool   `json:"matchAll" validate:"omitempty"`
 	Strict      *bool   `json:"strict" validate:"omitempty"`
 }
-
-func NewUserFiltersDto(username *string, displayName *string, socialId *string, matchAll *bool, strict *bool, id *int) *UserFiltersDto {
-	return &UserFiltersDto{
-		Username:    username,
-		DisplayName: displayName,
-		SocialId:    socialId,
-		MatchAll:    matchAll,
-		Strict:      strict,
-		Id:          id,
-	}
-}

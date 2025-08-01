@@ -10,11 +10,6 @@ type ValidationError struct {
 	Violations []Violation `json:"violations"`
 }
 
-// Error implements error.
-func (v *ValidationError) Error() string {
-	panic("unimplemented")
-}
-
 func NewValidationError(message string, violations []Violation) *ValidationError {
 	return &ValidationError{
 		Message:    message,

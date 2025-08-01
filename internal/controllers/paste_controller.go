@@ -31,7 +31,6 @@ func (p *pasteController) SearchPaste(c *fiber.Ctx) error {
 	return p.pasteService.Search(c)
 }
 
-
 func (p *pasteController) DeletePaste(c *fiber.Ctx) error {
 	return p.pasteService.Delete(c)
 }
