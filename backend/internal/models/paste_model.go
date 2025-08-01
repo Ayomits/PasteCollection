@@ -3,11 +3,12 @@ package models
 import "time"
 
 type PasteModel struct {
-	Id         int       `json:"id"`
-	Title      string    `json:"title"`
-	Tags       []string  `json:"tags"`
-	Paste      string    `json:"paste"`
-	
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Id    int    `db:"id" json:"id" validate:"omitempty"`
+	Title string `db:"title" json:"title" validate:"omitempty"`
+	Paste string `db:"paste" json:"paste" validate:"omitempty"`
+
+	UserId int `db:"user_id" json:"userId" validate:"omitempty"`
+
+	CreatedAt time.Time `db:"created_at" json:"created_at" validate:"omitempty"`
+	UpdatedAt time.Time `db:"updated_at" json:"updated_at" validate:"omitempty"`
 }

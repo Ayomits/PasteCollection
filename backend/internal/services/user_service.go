@@ -34,15 +34,12 @@ func (u *userService) Find(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Cannot parse query parametrs.."))
 	}
-
 	filterViolations := validators.AppValidatorInstance.Validate(queryObj)
-
 	if filterViolations != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(filterViolations)
 	}
 
 	result, err := u.userRepository.Find(queryObj)
-
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Error while query to db"))
 	}

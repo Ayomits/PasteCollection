@@ -29,10 +29,6 @@ func ConnectRoutes(app *fiber.App) {
 
 	api := app.Group("/api").Use(middlewares.New(configService))
 
-	pasteRepository := repositories.NewPasteRepository(db)
-	pasteService := services.NewPasteService(pasteRepository)
-	pasteController := controllers.NewPasteController(pasteService)
-
 	users := api.Group("/users")
 	userRepository := repositories.NewUserRepository(db)
 	userService := services.NewUserService(userRepository)
@@ -51,12 +47,16 @@ func ConnectRoutes(app *fiber.App) {
 	auth.Post("/register", authController.Register)
 
 	pastes := api.Group("/pastes")
+	pasteRepository := repositories.NewPasteRepository(db)
+	pasteService := services.NewPasteService(pasteRepository)
+	pasteController := controllers.NewPasteController(pasteService)
 
 	// Все пасты можно получить только по query!!
-	pastes.Get("/", pasteController.SearchPaste)
+	pastes.Get("/", pasteController.FindPaste)
+	pastes.Get("/search", pasteController.SearchPaste)
 	pastes.Post("/", pasteController.CreatePaste)
-	pastes.Put("/:criteria", pasteController.UpdatePaste)
-	pastes.Delete("/:criteria", pasteController.DeletePaste)
+	pastes.Put("/", pasteController.UpdatePaste)
+	pastes.Delete("/", pasteController.DeletePaste)
 }
 
 func ConnectToDb(configService services.ConfigService) *pgxpool.Pool {

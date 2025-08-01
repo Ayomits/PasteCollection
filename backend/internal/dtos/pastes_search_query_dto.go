@@ -1,6 +1,6 @@
 package dtos
 
 type PastesSearchQueryDto struct {
-	Filter     *PastesFilterDto `json:"filter"`
-	Pagination *PaginationDto   `json:"pagination"`
+	Filter     *PastesFilterDto `json:"filter" validate:"omitempty"`
+	Pagination *PaginationDto   `json:"pagination" validate:"omitempty"`
 }
