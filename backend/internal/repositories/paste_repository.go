@@ -168,12 +168,6 @@ func (p *pasteRepository) buildFilters(filter *dtos.PastesFilterDto, startFrom i
 			}
 		}
 
-		if filter.SocialId != nil {
-			position++
-			conditions = append(conditions, fmt.Sprintf("user_id = (SELECT id FROM users WHERE social_id = $%d)", position))
-			args = append(args, filter.SocialId)
-		}
-
 		if filter.UserId != nil {
 			position++
 			conditions = append(conditions, fmt.Sprintf("user_id=$%d", position))

@@ -34,24 +34,16 @@ func ConnectRoutes(app *fiber.App) {
 	userService := services.NewUserService(userRepository)
 	userController := controllers.NewUserController(userService)
 
-	// Всех пользователей можно получить только по query!!
 	users.Get("/", userController.Find)
 	users.Post("/", userController.Create)
 	users.Put("/", userController.Update)
 	users.Delete("/", userController.Delete)
-
-	auth := api.Group("/auth")
-	authService := services.NewAuthService(&userRepository)
-	authController := controllers.NewAuthController(authService)
-
-	auth.Post("/register", authController.Register)
 
 	pastes := api.Group("/pastes")
 	pasteRepository := repositories.NewPasteRepository(db)
 	pasteService := services.NewPasteService(pasteRepository)
 	pasteController := controllers.NewPasteController(pasteService)
 
-	// Все пасты можно получить только по query!!
 	pastes.Get("/", pasteController.FindPaste)
 	pastes.Get("/search", pasteController.SearchPaste)
 	pastes.Post("/", pasteController.CreatePaste)

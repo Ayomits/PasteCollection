@@ -202,5 +202,5 @@ func (p *pasteService) Update(c *fiber.Ctx) error {
 }
 
 func (p *pasteService) isEmptyFilter(filter *dtos.PastesFilterDto) bool {
-	return filter.Search == nil && filter.SocialId == nil && filter.UserId == nil && filter.PasteId == nil
+	return filter.Search == nil && filter.UserId == nil && filter.PasteId == nil
 }
