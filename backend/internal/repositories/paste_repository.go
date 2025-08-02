@@ -179,6 +179,12 @@ func (p *pasteRepository) buildFilters(filter *dtos.PastesFilterDto, startFrom i
 			conditions = append(conditions, fmt.Sprintf("id=$%d", position))
 			args = append(args, filter.PasteId)
 		}
+
+		if filter.SocialId != nil {
+			position++
+			conditions = append(conditions, fmt.Sprintf("user_id = (SELECT id FROM users WHERE social_id=$%d)", position))
+			args = append(args, filter.SocialId)
+		}
 	}
 
 	if pagination != nil {
@@ -191,16 +197,6 @@ func (p *pasteRepository) buildFilters(filter *dtos.PastesFilterDto, startFrom i
 			}
 			args = append(args, pagination.StartFrom)
 		}
-
-		if pagination.Sort != nil {
-			conditions = append(conditions, fmt.Sprintf("ORDER BY id %s", *pagination.Order))
-		}
-
-		if pagination.Limit != nil {
-			position++
-			conditions = append(conditions, fmt.Sprintf("LIMIT $%d", position))
-			args = append(args, *pagination.Limit+1)
-		}
 	}
 
 	if len(conditions) > 0 {
@@ -209,6 +205,25 @@ func (p *pasteRepository) buildFilters(filter *dtos.PastesFilterDto, startFrom i
 		} else {
 			condition = fmt.Sprintf("WHERE %s", strings.Join(conditions, ""))
 		}
+	}
+
+	if pagination != nil {
+		sort := "ASC"
+		if pagination.Sort != nil {
+			sort = *pagination.Sort
+		}
+		sortStr := fmt.Sprintf(" ORDER BY id %s", sort)
+		condition += sortStr
+
+		limit := 10
+		if pagination.Limit != nil {
+			limit = *pagination.Limit
+
+		}
+		position++
+		limitStr := fmt.Sprintf(" LIMIT $%d", position)
+		condition += limitStr
+		args = append(args, limit)
 	}
 
 	return condition, args
