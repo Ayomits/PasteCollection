@@ -98,12 +98,12 @@ func (p *pasteService) Delete(c *fiber.Ctx) error {
 
 func (p *pasteService) Find(c *fiber.Ctx) error {
 	url := c.BaseURL() + c.OriginalURL()
-	queryObj, err := querymap.FromURLStringToStruct[dtos.PastesSearchQueryDto](url)
+	queryObj, err := querymap.FromURLStringToStruct[dtos.PastesFilterDto](url)
 	if err != nil {
 		log.Error(err)
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Failed to parse query..."))
 	}
-	existed, err := p.pasteRepository.FindOne(queryObj.Filter, queryObj.Pagination)
+	existed, err := p.pasteRepository.FindOne(queryObj, nil)
 
 	if err != nil {
 		log.Error(err)
