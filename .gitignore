@@ -3,3 +3,4 @@
 **/.pnpm_store
 **/.env
 **/dist
+**/tsconfig.tsbuildinfo

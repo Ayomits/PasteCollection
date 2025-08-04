@@ -15,6 +15,9 @@ export const PasteCreateMessages = {
     internal: {
       title: "Произошла внутренняя ошибка",
       description: "Что-то пошло не так...",
+      fields: (text: string) => [
+        { name: "Текст пасты", value: codeBlock(text) },
+      ],
     },
   },
 } as const;
