@@ -20,7 +20,10 @@ export const PasteInfoMessages = {
       const updatedAt = new Date(paste.updatedAt);
 
       const format = (d: Date) => {
-        return [d.getDate(), d.getMonth(), d.getFullYear()].join("/");
+        return [
+          [d.getDate(), d.getMonth(), d.getFullYear()].join("."),
+          [d.getHours(), d.getMinutes()].join(":"),
+        ].join(" ");
       };
       return [
         {

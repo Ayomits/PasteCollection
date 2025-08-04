@@ -8,10 +8,10 @@ import { container } from "tsyringe";
 
 import { configService } from "#/config/config.js";
 import { createLogger } from "#logger/index.js";
+import { Env } from "#config/env.js";
 
 async function bootstrap() {
   DIService.engine = tsyringeDependencyRegistryEngine.setInjector(container);
-  const APP_ENV = configService.get("APP_ENV");
   const logger = createLogger();
   const client = new Client({
     intents: [
@@ -24,9 +24,9 @@ async function bootstrap() {
     simpleCommand: {
       prefix: "!",
     },
-    silent: APP_ENV !== "dev",
+    silent: Env.AppEnv !== "dev",
     botGuilds:
-      APP_ENV === "dev"
+      Env.AppEnv === "dev"
         ? ["1265957323193716788", "1391117548036165752", "1369790516627247255"]
         : undefined,
   });
