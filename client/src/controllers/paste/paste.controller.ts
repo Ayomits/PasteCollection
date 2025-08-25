@@ -1,22 +1,35 @@
 import {
   ApplicationCommandOptionType,
+  ApplicationIntegrationType,
   type CommandInteraction,
   type ModalSubmitInteraction,
 } from "discord.js";
-import { Discord, ModalComponent, Slash, SlashOption } from "discordx";
+import {
+  Discord,
+  ModalComponent,
+  Slash,
+  SlashGroup,
+  SlashOption,
+} from "discordx";
 import { inject, singleton } from "tsyringe";
 
 import { PasteCreateModalId, PasteUpdateModalId } from "./paste.const.js";
 import { PasteService } from "./paste.service.js";
 
 @Discord()
+@SlashGroup({ name: "paste", description: "Управление пастами" })
+@SlashGroup("paste")
 @singleton()
 export class PasteController {
   constructor(@inject(PasteService) private pasteService: PasteService) {}
 
   @Slash({
-    name: "paste-info",
+    name: "info",
     description: "Поиск по пастам",
+    integrationTypes: [
+      ApplicationIntegrationType.UserInstall,
+      ApplicationIntegrationType.GuildInstall,
+    ],
   })
   pasteInfoSlash(
     @SlashOption({
@@ -40,8 +53,12 @@ export class PasteController {
   }
 
   @Slash({
-    name: "paste-create",
+    name: "create",
     description: "Создать новую пасту",
+    integrationTypes: [
+      ApplicationIntegrationType.UserInstall,
+      ApplicationIntegrationType.GuildInstall,
+    ],
   })
   pasteCreateSlash(interaction: CommandInteraction) {
     return this.pasteService.createSlash(interaction);
@@ -53,8 +70,12 @@ export class PasteController {
   }
 
   @Slash({
-    name: "paste-delete",
+    name: "delete",
     description: "Удалить пасту",
+    integrationTypes: [
+      ApplicationIntegrationType.UserInstall,
+      ApplicationIntegrationType.GuildInstall,
+    ],
   })
   async pasteDeleteSlash(
     @SlashOption({
@@ -84,8 +105,12 @@ export class PasteController {
   }
 
   @Slash({
-    name: "paste-update",
+    name: "update",
     description: "Удалить пасту",
+    integrationTypes: [
+      ApplicationIntegrationType.UserInstall,
+      ApplicationIntegrationType.GuildInstall,
+    ],
   })
   async pasteUpdateSlash(
     @SlashOption({

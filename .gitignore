@@ -1,6 +1,8 @@
 **/node_modules
 **/vendor
-**/.pnpm_store
+**/.pnpm-store
 **/.env
 **/dist
 **/tsconfig.tsbuildinfo
+**/.idea
+**/.vscode

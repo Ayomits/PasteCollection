@@ -7,8 +7,8 @@ import { Client, DIService, tsyringeDependencyRegistryEngine } from "discordx";
 import { container } from "tsyringe";
 
 import { configService } from "#/config/config.js";
-import { createLogger } from "#logger/index.js";
 import { Env } from "#config/env.js";
+import { createLogger } from "#logger/index.js";
 
 async function bootstrap() {
   DIService.engine = tsyringeDependencyRegistryEngine.setInjector(container);
@@ -25,10 +25,6 @@ async function bootstrap() {
       prefix: "!",
     },
     silent: Env.AppEnv !== "dev",
-    botGuilds:
-      Env.AppEnv === "dev"
-        ? ["1265957323193716788", "1391117548036165752", "1369790516627247255"]
-        : undefined,
   });
 
   client.once("ready", async () => {

@@ -1,0 +1,4 @@
+#!/bin/sh
+cd /app
+go build -o /usr/bin/app ./cmd/app/main.go
+/usr/bin/app

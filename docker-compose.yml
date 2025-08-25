@@ -14,6 +14,31 @@ services:
       - postgres_data:/pgdata
     ports:
       - "5432:5432"
+  pastcollection-backend:
+    container_name: pastcollection-backend
+    build:
+      dockerfile: ./backend/Dockerfile
+      args:
+        - APP_ENV=$APP_ENV
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/app
+
+  pastcollection-bot:
+    container_name: pastcollection-bot
+    network_mode: host
+    env_file:
+      - .env
+    build:
+      dockerfile: ./client/Dockerfile
+      args:
+        - APP_ENV=$APP_ENV
+    volumes:
+      - ./client:/app
+
 
 volumes:
   postgres_data:

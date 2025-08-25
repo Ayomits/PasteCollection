@@ -1,25 +1,18 @@
 import dt from "dotenv";
 
 export class ConfigService {
-  private entries: dt.DotenvParseOutput;
-
-  constructor(options?: dt.DotenvConfigOptions) {
-    const config = dt.config(options);
-    if (config.error || !config) {
-      throw new Error(`Failded to parse config \n ${options}`);
-    }
-    this.entries = config.parsed!;
+  constructor() {
+    dt.config();
   }
 
   public get<T = string>(key: string, default_?: T): T {
-    const existed = this.entries[key] ?? default_;
-    return existed as T;
+    return (process.env[key] ?? default_) as T;
   }
 
-  public getOrThrow<T = string>(key: string): T {
-    const existed = this.get<T>(key);
+  public getOrThrow<T = string>(key: string, default_?: T): T {
+    const existed = this.get<T>(key, default_);
     if (!existed) {
-      throw new Error(`Key ${key} does not exists`);
+      throw new Error(`Environment key ${key} does not exists`);
     }
     return existed;
   }

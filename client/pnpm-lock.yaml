@@ -53,6 +53,9 @@ importers:
       eslint-plugin-simple-import-sort:
         specifier: ^12.1.1
         version: 12.1.1(eslint@9.32.0)
+      glob:
+        specifier: ^11.0.3
+        version: 11.0.3
       globals:
         specifier: ^16.3.0
         version: 16.3.0

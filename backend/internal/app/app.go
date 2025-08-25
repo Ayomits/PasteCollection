@@ -26,6 +26,9 @@ func ConnectRoutes(app *fiber.App) {
 	configService := services.NewConfigService()
 
 	db := ConnectToDb(configService)
+	if db == nil {
+		panic("Db is not connected")
+	}
 
 	api := app.Group("/api").Use(middlewares.New(configService))
 

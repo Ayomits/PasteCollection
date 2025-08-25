@@ -1,0 +1,7 @@
+**/.turbo
+**/node_modules
+**/dist
+**/.git
+**/.pnpm-store
+**/.github
+**/vendor
