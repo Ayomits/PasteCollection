@@ -44,7 +44,7 @@ export class PasteService {
             .setTitle(PasteInfoMessages.validation.title)
             .setDescription(PasteInfoMessages.validation.nan),
         ],
-      });
+      }).catch(console.error);
     }
     const paste = await pastesApi.findSignlePaste({
       pasteId: Number(pasteId),
@@ -56,7 +56,7 @@ export class PasteService {
             .setTitle(PasteInfoMessages.validation.title)
             .setDescription(PasteInfoMessages.validation.nullable),
         ],
-      });
+      }).catch(console.error);
     }
 
     await interaction.editReply({
@@ -68,7 +68,7 @@ export class PasteService {
             text: PasteInfoMessages.success.footer.text(paste.data.views + 1),
           }),
       ],
-    });
+    }).catch(console.error);
 
     return await pastesApi.incrementViews(paste.data.id);
   }

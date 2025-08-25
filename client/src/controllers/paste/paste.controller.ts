@@ -6,6 +6,7 @@ import {
   type ModalSubmitInteraction,
 } from "discord.js";
 import {
+  ContextMenu,
   Discord,
   ModalComponent,
   Slash,
@@ -141,6 +142,8 @@ export class PasteController {
   pasteUpdateModal(interaction: ModalSubmitInteraction) {
     return this.pasteService.updateModal(interaction);
   }
+
+
 
   @Slash({
     name: "update",
