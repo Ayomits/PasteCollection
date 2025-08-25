@@ -234,7 +234,7 @@ export class PasteService {
         .setValue(existed.data.id.toString())
         .setPlaceholder("Если ты это видишь - верни как было")
         .setMinLength(1)
-        .setStyle(TextInputStyle.Paragraph)
+        .setStyle(TextInputStyle.Short)
     );
 
     return interaction.showModal(
