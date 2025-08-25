@@ -12,4 +12,4 @@ console_backend:
 	docker exec -it pastcollection-backend sh
 
 console_bot:
-	docker exec -it pastcollection-backend sh
+	docker exec -it pastcollection-bot sh

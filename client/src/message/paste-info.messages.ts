@@ -47,5 +47,8 @@ export const PasteInfoMessages = {
         },
       ];
     },
+    footer: {
+      text: (views: number) => `${views} просмотров`,
+    },
   },
 } as const;

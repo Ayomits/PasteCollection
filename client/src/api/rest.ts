@@ -1,4 +1,3 @@
-import { LocalCache } from "@ts-fetcher/cache";
 import { createRestInstance } from "@ts-fetcher/rest";
 import type {
   RequestInterceptor,
@@ -48,18 +47,18 @@ const logger = new Logger({
   },
 });
 
-const LogRequestInterceptor: RequestInterceptor = (options) => {
+const LogRequestInterceptor: RequestInterceptor<unknown> = (options) => {
   logger.info(`${options.method} | ${options.path} | incoming request`);
   return options;
 };
 
-const LogResponseInterceptor: ResponseInterceptor = (res) => {
-  const { options, success, cached } = res;
+const LogResponseInterceptor: ResponseInterceptor<unknown> = (res) => {
+  const { options, success } = res;
   if (!success) {
     logger.error(`${options.method} | ${options.path} | failure request`);
   } else {
     logger.success(
-      `${options.method} | ${options.path} | ${cached ? "CACHED" : "NEW"} | succesful request`
+      `${options.method} | ${options.path} | succesful request`
     );
   }
   return res;
@@ -69,10 +68,9 @@ export const rest = createRestInstance(Env.ApiUrl, {
   defaultRequestOptions: {
     headers: {
       Authorization: Env.ApiToken,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
   },
-  caching: new LocalCache(),
   interceptors: {
     request: [LogRequestInterceptor],
     response: [LogResponseInterceptor],

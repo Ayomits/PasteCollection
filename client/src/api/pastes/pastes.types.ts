@@ -12,6 +12,7 @@ export interface Paste {
   id: number
   title: string;
   paste: string;
+  views: number;
   userId: number;
 
   createdAt: string;

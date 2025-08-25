@@ -36,6 +36,10 @@ export class PastesApi extends BaseApi {
     );
   }
 
+  async incrementViews(id: number) {
+    return await rest.patch<Paste, UpdatePastePayload>(`/pastes/${id}/increment`);
+  }
+
   async deletePaste(f: Partial<PasteFilter>) {
     return await rest.delete("/pastes" + this.getQuery(f));
   }

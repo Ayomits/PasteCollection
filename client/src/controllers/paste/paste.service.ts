@@ -59,13 +59,18 @@ export class PasteService {
       });
     }
 
-    return interaction.editReply({
+    await interaction.editReply({
       embeds: [
         embed
           .setTitle(PasteInfoMessages.success.title(paste.data.title))
-          .setFields(await PasteInfoMessages.success.fields(paste.data)),
+          .setFields(await PasteInfoMessages.success.fields(paste.data))
+          .setFooter({
+            text: PasteInfoMessages.success.footer.text(paste.data.views + 1),
+          }),
       ],
     });
+
+    return await pastesApi.incrementViews(paste.data.id);
   }
 
   createSlash(interaction: CommandInteraction) {
