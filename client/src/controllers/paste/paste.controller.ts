@@ -18,7 +18,20 @@ import { PasteCreateModalId, PasteUpdateModalId } from "./paste.const.js";
 import { PasteService } from "./paste.service.js";
 
 @Discord()
-@SlashGroup({ name: "paste", description: "Управление пастами" })
+@SlashGroup({
+  name: "paste",
+  description: "Управление пастами",
+  dmPermission: true,
+  contexts: [
+    InteractionContextType.BotDM,
+    InteractionContextType.Guild,
+    InteractionContextType.PrivateChannel,
+  ],
+  integrationTypes: [
+    ApplicationIntegrationType.UserInstall,
+    ApplicationIntegrationType.GuildInstall,
+  ],
+})
 @SlashGroup("paste")
 @singleton()
 export class PasteController {
@@ -31,7 +44,7 @@ export class PasteController {
     contexts: [
       InteractionContextType.BotDM,
       InteractionContextType.Guild,
-      InteractionContextType.PrivateChannel
+      InteractionContextType.PrivateChannel,
     ],
     integrationTypes: [
       ApplicationIntegrationType.UserInstall,
@@ -66,7 +79,7 @@ export class PasteController {
     contexts: [
       InteractionContextType.BotDM,
       InteractionContextType.Guild,
-      InteractionContextType.PrivateChannel
+      InteractionContextType.PrivateChannel,
     ],
     integrationTypes: [
       ApplicationIntegrationType.UserInstall,
@@ -89,7 +102,7 @@ export class PasteController {
     contexts: [
       InteractionContextType.BotDM,
       InteractionContextType.Guild,
-      InteractionContextType.PrivateChannel
+      InteractionContextType.PrivateChannel,
     ],
     integrationTypes: [
       ApplicationIntegrationType.UserInstall,
@@ -130,7 +143,7 @@ export class PasteController {
     contexts: [
       InteractionContextType.BotDM,
       InteractionContextType.Guild,
-      InteractionContextType.PrivateChannel
+      InteractionContextType.PrivateChannel,
     ],
     integrationTypes: [
       ApplicationIntegrationType.UserInstall,

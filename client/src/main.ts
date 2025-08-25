@@ -18,6 +18,7 @@ async function bootstrap() {
       GatewayIntentBits.MessageContent,
       GatewayIntentBits.GuildMembers,
       GatewayIntentBits.Guilds,
+      GatewayIntentBits.DirectMessages,
       GatewayIntentBits.GuildMessages,
     ],
     logger: logger,
