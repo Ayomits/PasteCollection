@@ -6,7 +6,6 @@ import {
   type ModalSubmitInteraction,
 } from "discord.js";
 import {
-  ContextMenu,
   Discord,
   ModalComponent,
   Slash,
