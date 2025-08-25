@@ -398,7 +398,7 @@ export class PasteService {
         })) ?? []
       );
     } catch {
-      return interaction.respond([]);
+      return interaction.respond([]).catch(console.error);
     }
   }
 }
