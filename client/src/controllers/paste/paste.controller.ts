@@ -63,6 +63,9 @@ export class PasteController {
           filter: {
             search: value,
           },
+          pagination: {
+            sort: "DESC",
+          },
         });
       },
     })
@@ -122,6 +125,9 @@ export class PasteController {
             search: value,
             socialId: interaction.user.id,
           },
+          pagination: {
+            sort: "DESC",
+          },
         });
       },
     })
@@ -162,6 +168,9 @@ export class PasteController {
           filter: {
             search: value,
             socialId: interaction.user.id,
+          },
+          pagination: {
+            sort: "DESC",
           },
         });
       },
