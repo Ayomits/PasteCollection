@@ -2,6 +2,7 @@ import {
   ApplicationCommandOptionType,
   ApplicationIntegrationType,
   type CommandInteraction,
+  InteractionContextType,
   type ModalSubmitInteraction,
 } from "discord.js";
 import {
@@ -26,6 +27,12 @@ export class PasteController {
   @Slash({
     name: "info",
     description: "Поиск по пастам",
+    dmPermission: true,
+    contexts: [
+      InteractionContextType.BotDM,
+      InteractionContextType.Guild,
+      InteractionContextType.PrivateChannel
+    ],
     integrationTypes: [
       ApplicationIntegrationType.UserInstall,
       ApplicationIntegrationType.GuildInstall,
@@ -55,6 +62,12 @@ export class PasteController {
   @Slash({
     name: "create",
     description: "Создать новую пасту",
+    dmPermission: true,
+    contexts: [
+      InteractionContextType.BotDM,
+      InteractionContextType.Guild,
+      InteractionContextType.PrivateChannel
+    ],
     integrationTypes: [
       ApplicationIntegrationType.UserInstall,
       ApplicationIntegrationType.GuildInstall,
@@ -72,6 +85,12 @@ export class PasteController {
   @Slash({
     name: "delete",
     description: "Удалить пасту",
+    dmPermission: true,
+    contexts: [
+      InteractionContextType.BotDM,
+      InteractionContextType.Guild,
+      InteractionContextType.PrivateChannel
+    ],
     integrationTypes: [
       ApplicationIntegrationType.UserInstall,
       ApplicationIntegrationType.GuildInstall,
@@ -107,6 +126,12 @@ export class PasteController {
   @Slash({
     name: "update",
     description: "Удалить пасту",
+    dmPermission: true,
+    contexts: [
+      InteractionContextType.BotDM,
+      InteractionContextType.Guild,
+      InteractionContextType.PrivateChannel
+    ],
     integrationTypes: [
       ApplicationIntegrationType.UserInstall,
       ApplicationIntegrationType.GuildInstall,
