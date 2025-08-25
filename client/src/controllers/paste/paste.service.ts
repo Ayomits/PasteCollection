@@ -280,19 +280,21 @@ export class PasteService {
       });
     }
 
-    const newExisted = await pastesApi.findSignlePaste({
-      search: title.trim(),
-      strict: true,
-    });
-
-    if (newExisted.success) {
-      return interaction.editReply({
-        embeds: [
-          embed
-            .setTitle(PasteUpdateMessages.validation.unique.title)
-            .setFields(PasteUpdateMessages.validation.unique.fields(paste)),
-        ],
+    if (title !== existed.data.title) {
+      const newExisted = await pastesApi.findSignlePaste({
+        search: title.trim(),
+        strict: true,
       });
+
+      if (newExisted.success) {
+        return interaction.editReply({
+          embeds: [
+            embed
+              .setTitle(PasteUpdateMessages.validation.unique.title)
+              .setFields(PasteUpdateMessages.validation.unique.fields(paste)),
+          ],
+        });
+      }
     }
 
     const updated = await pastesApi.updatePaste(

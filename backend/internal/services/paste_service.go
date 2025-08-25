@@ -33,7 +33,7 @@ func NewPasteService(r repositories.PasteRepository) PasteService {
 func (p *pasteService) Increment(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 
-	if err != nil{
+	if err != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(responses.NewValidationError("Is not integer id", []responses.Violation{
 			*responses.NewViolation("Not integer", "id"),
 		}))
@@ -43,17 +43,17 @@ func (p *pasteService) Increment(c *fiber.Ctx) error {
 		PasteId: &id,
 	})
 
-	if err != nil{
+	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
 	}
 
-	if existed == nil{
+	if existed == nil {
 		return c.Status(fiber.StatusNotFound).JSON(responses.NewNotFoundError("Paste not existed"))
 	}
 
 	updated, err := p.pasteRepository.IncrementViews(id)
 
-	if err != nil{
+	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
 	}
 
@@ -157,6 +157,7 @@ func (p *pasteService) Search(c *fiber.Ctx) error {
 		log.Error(err)
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Failed to parse query..."))
 	}
+
 	existed, err := p.pasteRepository.FindMany(queryObj.Filter, queryObj.Pagination)
 
 	if err != nil {
@@ -201,27 +202,40 @@ func (p *pasteService) Update(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
 	}
 
+	existed, err := p.pasteRepository.FindOne(queryObj)
+
+	if err != nil {
+		log.Error(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
+	}
+
+	if existed == nil {
+		return c.Status(fiber.StatusNotFound).JSON(responses.NewNotFoundError("paste not found"))
+	}
+
 	bodyViolations := validators.AppValidatorInstance.Validate(body)
 
 	if bodyViolations != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(bodyViolations)
 	}
 
-	strict := true
-	existed, err := p.pasteRepository.FindOne(&dtos.PastesFilterDto{
-		Search: &body.Title,
-		Strict: &strict,
-	})
+	if existed.Title != body.Title {
+		strict := true
+		existed, err = p.pasteRepository.FindOne(&dtos.PastesFilterDto{
+			Search: &body.Title,
+			Strict: &strict,
+		})
 
-	if err != nil {
-		log.Errorf("While quering db %v", err)
-		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
-	}
+		if err != nil {
+			log.Errorf("While quering db %v", err)
+			return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
+		}
 
-	if existed != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(responses.NewValidationError("Paste already exists", []responses.Violation{
-			*responses.NewViolation("Paste already exists", "title"),
-		}))
+		if existed != nil {
+			return c.Status(fiber.StatusUnprocessableEntity).JSON(responses.NewValidationError("Paste already exists", []responses.Violation{
+				*responses.NewViolation("Paste already exists", "title"),
+			}))
+		}
 	}
 
 	newPaste, err := p.pasteRepository.Update(queryObj, &body)
