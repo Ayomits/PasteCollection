@@ -14,17 +14,19 @@ import (
 )
 
 const (
-	CreatePasteSql = "INSERT INTO pastes (title, paste, user_id) VALUES ($1, $2, $3) RETURNING id, title, paste, user_id, created_at, updated_at"
-	FindPasteSql   = "SELECT id, title, paste, user_id, created_at, updated_at FROM pastes %s"
-	UpdatePasteSql = "UPDATE pastes SET title=$1, paste=$2, updated_at=now() %s RETURNING id, title, paste, user_id, created_at, updated_at"
+	CreatePasteSql = "INSERT INTO pastes (title, paste, user_id) VALUES ($1, $2, $3) RETURNING id, title, paste, views, user_id, created_at, updated_at"
+	FindPasteSql   = "SELECT id, title, paste, views, user_id, created_at, updated_at FROM pastes %s"
+	IncrementViews = "UPDATE pastes SET views=views+1 WHERE id=$1 RETURNING id, title, paste, views, user_id, created_at, updated_at"
+	UpdatePasteSql = "UPDATE pastes SET title=$1, paste=$2, updated_at=now() %s RETURNING id, title, paste, views, user_id, created_at, updated_at"
 	DeletePasteSql = "DELETE FROM pastes %s"
 )
 
 type PasteRepository interface {
-	FindOne(filter *dtos.PastesFilterDto, pagination *dtos.PaginationDto) (*models.PasteModel, error)
+	FindOne(filter *dtos.PastesFilterDto) (*models.PasteModel, error)
 	FindMany(filter *dtos.PastesFilterDto, pagination *dtos.PaginationDto) ([]*models.PasteModel, error)
 	Create(dto *dtos.PasteDto) (*models.PasteModel, error)
 	Update(filter *dtos.PastesFilterDto, dto *dtos.UpdatePasteDto) (*models.PasteModel, error)
+	IncrementViews(pasteId int) (*models.PasteModel, error)
 	Delete(filter *dtos.PastesFilterDto) (bool, error)
 }
 
@@ -36,15 +38,37 @@ func NewPasteRepository(p *pgxpool.Pool) PasteRepository {
 	return &pasteRepository{pool: p}
 }
 
-func (p *pasteRepository) FindOne(filter *dtos.PastesFilterDto, pagination *dtos.PaginationDto) (*models.PasteModel, error) {
+func (p *pasteRepository) IncrementViews(pasteId int) (*models.PasteModel, error) {
 	var paste models.PasteModel
-	condition, args := p.buildFilters(filter, 0, pagination)
+	err := p.pool.
+		QueryRow(context.Background(), IncrementViews, pasteId).
+		Scan(
+			&paste.Id,
+			&paste.Title,
+			&paste.Paste,
+			&paste.Views,
+			&paste.UserId,
+			&paste.CreatedAt,
+			&paste.UpdatedAt,
+		)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &paste, nil
+}
+
+func (p *pasteRepository) FindOne(filter *dtos.PastesFilterDto) (*models.PasteModel, error) {
+	var paste models.PasteModel
+	condition, args := p.buildFilters(filter, 0, nil)
 	err := p.pool.
 		QueryRow(context.Background(), fmt.Sprintf(FindPasteSql, condition), args...).
 		Scan(
 			&paste.Id,
 			&paste.Title,
 			&paste.Paste,
+			&paste.Views,
 			&paste.UserId,
 			&paste.CreatedAt,
 			&paste.UpdatedAt,
@@ -83,6 +107,7 @@ func (p *pasteRepository) FindMany(filter *dtos.PastesFilterDto, pagination *dto
 				&paste.Id,
 				&paste.Title,
 				&paste.Paste,
+				&paste.Views,
 				&paste.UserId,
 				&paste.CreatedAt,
 				&paste.UpdatedAt,
@@ -103,6 +128,7 @@ func (p *pasteRepository) Create(dto *dtos.PasteDto) (*models.PasteModel, error)
 		&paste.Id,
 		&paste.Title,
 		&paste.Paste,
+		&paste.Views,
 		&paste.UserId,
 		&paste.CreatedAt,
 		&paste.UpdatedAt,
@@ -126,6 +152,7 @@ func (p *pasteRepository) Update(filter *dtos.PastesFilterDto, dto *dtos.UpdateP
 		&paste.Id,
 		&paste.Title,
 		&paste.Paste,
+		&paste.Views,
 		&paste.UserId,
 		&paste.CreatedAt,
 		&paste.UpdatedAt,

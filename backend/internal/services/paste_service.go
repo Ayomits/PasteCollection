@@ -7,6 +7,8 @@ import (
 	"api/internal/services/querymap"
 	"api/internal/services/validators"
 
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 )
@@ -14,6 +16,7 @@ import (
 type PasteService interface {
 	Create(c *fiber.Ctx) error
 	Find(c *fiber.Ctx) error
+	Increment(c *fiber.Ctx) error
 	Search(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
@@ -25,6 +28,36 @@ type pasteService struct {
 
 func NewPasteService(r repositories.PasteRepository) PasteService {
 	return &pasteService{pasteRepository: r}
+}
+
+func (p *pasteService) Increment(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+
+	if err != nil{
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(responses.NewValidationError("Is not integer id", []responses.Violation{
+			*responses.NewViolation("Not integer", "id"),
+		}))
+	}
+
+	existed, err := p.pasteRepository.FindOne(&dtos.PastesFilterDto{
+		PasteId: &id,
+	})
+
+	if err != nil{
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
+	}
+
+	if existed == nil{
+		return c.Status(fiber.StatusNotFound).JSON(responses.NewNotFoundError("Paste not existed"))
+	}
+
+	updated, err := p.pasteRepository.IncrementViews(id)
+
+	if err != nil{
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(updated)
 }
 
 func (p *pasteService) Create(c *fiber.Ctx) error {
@@ -45,7 +78,7 @@ func (p *pasteService) Create(c *fiber.Ctx) error {
 	existed, err := p.pasteRepository.FindOne(&dtos.PastesFilterDto{
 		Search: &body.Title,
 		Strict: &strict,
-	}, nil)
+	})
 
 	if err != nil {
 		log.Errorf("While quering db %v", err)
@@ -80,7 +113,7 @@ func (p *pasteService) Delete(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(responses.NewBadRequestError("Empty query parametrs"))
 	}
 
-	existed, err := p.pasteRepository.FindOne(queryObj, nil)
+	existed, err := p.pasteRepository.FindOne(queryObj)
 
 	if existed == nil {
 		return c.Status(fiber.StatusNotFound).JSON(responses.NewBadRequestError("Paste not found"))
@@ -103,7 +136,7 @@ func (p *pasteService) Find(c *fiber.Ctx) error {
 		log.Error(err)
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Failed to parse query..."))
 	}
-	existed, err := p.pasteRepository.FindOne(queryObj, nil)
+	existed, err := p.pasteRepository.FindOne(queryObj)
 
 	if err != nil {
 		log.Error(err)
@@ -178,7 +211,7 @@ func (p *pasteService) Update(c *fiber.Ctx) error {
 	existed, err := p.pasteRepository.FindOne(&dtos.PastesFilterDto{
 		Search: &body.Title,
 		Strict: &strict,
-	}, nil)
+	})
 
 	if err != nil {
 		log.Errorf("While quering db %v", err)

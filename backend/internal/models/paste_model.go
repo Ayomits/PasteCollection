@@ -6,6 +6,7 @@ type PasteModel struct {
 	Id    int    `db:"id" json:"id" validate:"omitempty"`
 	Title string `db:"title" json:"title" validate:"omitempty"`
 	Paste string `db:"paste" json:"paste" validate:"omitempty"`
+	Views int    `db:"views" json:"views" validate:"omitempty"`
 
 	UserId int `db:"user_id" json:"userId" validate:"omitempty"`
 

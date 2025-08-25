@@ -12,15 +12,19 @@ type PasteController interface {
 	CreatePaste(c *fiber.Ctx) error
 	DeletePaste(c *fiber.Ctx) error
 	UpdatePaste(c *fiber.Ctx) error
+	Increment(c *fiber.Ctx) error
 }
 
 type pasteController struct {
 	pasteService services.PasteService
 }
 
-
 func NewPasteController(pasteService services.PasteService) PasteController {
 	return &pasteController{pasteService: pasteService}
+}
+
+func (p *pasteController) Increment(c *fiber.Ctx) error {
+	return p.pasteService.Increment(c);
 }
 
 func (p *pasteController) FindPaste(c *fiber.Ctx) error {
