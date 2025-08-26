@@ -46,6 +46,12 @@ console_bot:
 console_postgres:
 	docker exec -it pastcollection-postgres sh
 
+cron_restore:
+	TIMESTAMP_MS = $(shell date +%s%3N)
+	filename = "$$TIMESTAMP_MS_backup"
+	make name=$$filename create_dump_auto
+	cp $$filename.gz ~/PasteCollectionDumps/$$filename.gz
+
 create_dump:
 	@read -p "Dump name: " name; \
 	make name=$$name create_dump_auto
