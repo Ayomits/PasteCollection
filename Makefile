@@ -48,11 +48,17 @@ console_postgres:
 
 create_dump:
 	@read -p "Dump name: " name; \
+	make name=$$name create_dump_auto
+
+restore_dump:
+	@read -p "Dump name: " path; \
+	make path=$$path restore_dump_auto
+
+create_dump_auto:
 	docker exec pastcollection-postgres pg_dump -U postgres -h localhost -p 5432 -F c -d postgres | gzip > $$name.gz; \
 	echo "Dump created: $$name.gz"
 
-restore_dump:
-	@read -p "Dump path: " path; \
+restore_dump_auto:
 	if [ ! -f "$$path" ]; then \
 		echo "Error: File $$path not found"; \
 		exit 1; \
