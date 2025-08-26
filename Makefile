@@ -50,11 +50,10 @@ cron_restore:
 	TIMESTAMP=$$(date +%s%3N); \
 	filename="$${TIMESTAMP}_backup"; \
 	$(MAKE) name="$$filename" create_dump_auto; \
-	mv "$$filename.gz" ~/PasteCollectionDumps/"$$filename.gz"
-	rm -rf "$(filename.gz)"
-	cd  ~/PasteCollectionDumps
-	git add .
-	git commit -m "chore: dump $(TIMESTAMP)"
+	mv "$$filename.gz" ~/PasteCollectionDumps/; \
+	cd ~/PasteCollectionDumps && \
+	git add "$$filename.gz" && \
+	git commit -m "chore: dump $$TIMESTAMP" && \
 	git push origin main
 
 create_dump:
