@@ -43,6 +43,25 @@ console_backend:
 console_bot:
 	docker exec -it pastcollection-bot sh
 
+console_postgres:
+	docker exec -it pastcollection-postgres sh
+
+create_dump:
+	@read -p "Dump name: " name; \
+	docker exec pastcollection-postgres pg_dump -U postgres -h localhost -p 5432 -F c -d postgres | gzip > $$name.gz; \
+	echo "Dump created: $$name.gz"
+
+restore_dump:
+	@read -p "Dump path: " path; \
+	if [ ! -f "$$path" ]; then \
+		echo "Error: File $$path not found"; \
+		exit 1; \
+	fi; \
+	docker cp "$$path" pastcollection-postgres:/tmp/backup.gz; \
+	docker exec pastcollection-postgres sh -c "gunzip -c /tmp/backup.gz | pg_restore -U postgres -h localhost -p 5432 -d postgres --clean --if-exists"; \
+	docker exec pastcollection-postgres rm -f /tmp/backup.gz; \
+	echo "Dump restored successfully from $$path"
+
 logs_bot:
 	docker compose logs pastcollection-bot -f
 
