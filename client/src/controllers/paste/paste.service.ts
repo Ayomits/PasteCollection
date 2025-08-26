@@ -2,6 +2,7 @@ import {
   ActionRowBuilder,
   type AutocompleteInteraction,
   type CommandInteraction,
+  type MessageContextMenuCommandInteraction,
   ModalBuilder,
   type ModalSubmitInteraction,
   TextInputBuilder,
@@ -38,70 +39,66 @@ export class PasteService {
       .setFooter({ text: usrname, iconURL: avatar });
     const numPasteId = Number(pasteId);
     if (Number.isNaN(numPasteId)) {
-      return interaction.editReply({
-        embeds: [
-          embed
-            .setTitle(PasteInfoMessages.validation.title)
-            .setDescription(PasteInfoMessages.validation.nan),
-        ],
-      }).catch(console.error);
+      return interaction
+        .editReply({
+          embeds: [
+            embed
+              .setTitle(PasteInfoMessages.validation.title)
+              .setDescription(PasteInfoMessages.validation.nan),
+          ],
+        })
+        .catch(console.error);
     }
     const paste = await pastesApi.findSignlePaste({
       pasteId: Number(pasteId),
     });
     if (!paste || !paste.success) {
-      return interaction.editReply({
-        embeds: [
-          embed
-            .setTitle(PasteInfoMessages.validation.title)
-            .setDescription(PasteInfoMessages.validation.nullable),
-        ],
-      }).catch(console.error);
+      return interaction
+        .editReply({
+          embeds: [
+            embed
+              .setTitle(PasteInfoMessages.validation.title)
+              .setDescription(PasteInfoMessages.validation.nullable),
+          ],
+        })
+        .catch(console.error);
     }
 
-    await interaction.editReply({
-      embeds: [
-        embed
-          .setTitle(PasteInfoMessages.success.title(paste.data.title))
-          .setFields(await PasteInfoMessages.success.fields(paste.data))
-          .setFooter({
-            text: PasteInfoMessages.success.footer.text(paste.data.views + 1),
-          }),
-      ],
-    }).catch(console.error);
+    await interaction
+      .editReply({
+        embeds: [
+          embed
+            .setTitle(PasteInfoMessages.success.title(paste.data.title))
+            .setFields(await PasteInfoMessages.success.fields(paste.data))
+            .setFooter({
+              text: PasteInfoMessages.success.footer.text(paste.data.views + 1),
+            }),
+        ],
+      })
+      .catch(console.error);
 
     return await pastesApi.incrementViews(paste.data.id);
   }
 
   createSlash(interaction: CommandInteraction) {
-    const title = new ActionRowBuilder<TextInputBuilder>().addComponents(
-      new TextInputBuilder()
-        .setCustomId("title")
-        .setLabel("Название пасты")
-        .setPlaceholder("О любви")
-        .setMinLength(1)
-        .setMaxLength(MaxPasteTitleLength)
-        .setRequired(true)
-        .setStyle(TextInputStyle.Short)
-    );
-    const paste = new ActionRowBuilder<TextInputBuilder>().addComponents(
-      new TextInputBuilder()
-        .setCustomId("paste")
-        .setLabel("Текст пасты")
-        .setPlaceholder("Имел отец слепого сына...")
-        .setMinLength(1)
-        .setMaxLength(MaxPasteTextLength)
-        .setRequired(true)
-        .setStyle(TextInputStyle.Paragraph)
-    );
-    const modal = new ModalBuilder()
-      .setTitle("Создать новую пасту")
-      .setCustomId(PasteCreateModalId)
-      .setComponents(title, paste);
+    const modal = this.buildCreationModal(PasteCreateModalId);
     return interaction.showModal(modal);
   }
 
-  async createModal(interaction: ModalSubmitInteraction) {
+  createContext(interaction: MessageContextMenuCommandInteraction) {
+    if (!interaction.targetMessage.content) {
+      return interaction.reply({
+        content: "У сообщения нет контента",
+        ephemeral: true,
+      });
+    }
+    const modal = this.buildCreationModal(PasteCreateModalId, {
+      defaultPaste: interaction.targetMessage.content,
+    });
+    return interaction.showModal(modal);
+  }
+
+  async handleCreationModal(interaction: ModalSubmitInteraction) {
     await interaction.deferReply();
     const usrname = UsersUtility.getUsername(interaction.user);
     const avatar = UsersUtility.getAvatar(interaction.user);
@@ -170,6 +167,49 @@ export class PasteService {
     });
   }
 
+  buildCreationModal(
+    customId: string,
+    defaults?: { defaultTitle?: string; defaultPaste?: string }
+  ) {
+    const titleField = new TextInputBuilder()
+      .setCustomId("title")
+      .setLabel("Название пасты")
+      .setPlaceholder("О любви")
+      .setMinLength(1)
+      .setMaxLength(MaxPasteTitleLength)
+      .setRequired(true)
+      .setStyle(TextInputStyle.Short);
+
+    const pasteField = new TextInputBuilder()
+      .setCustomId("paste")
+      .setLabel("Текст пасты")
+      .setPlaceholder("Имел отец слепого сына...")
+      .setMinLength(1)
+      .setMaxLength(MaxPasteTextLength)
+      .setRequired(true)
+      .setStyle(TextInputStyle.Paragraph);
+
+    if (defaults?.defaultTitle) {
+      titleField.setValue(defaults.defaultTitle);
+    }
+
+    if (defaults?.defaultPaste) {
+      pasteField.setValue(defaults.defaultPaste.slice(0, MaxPasteTextLength));
+    }
+
+    const [title, paste] = [
+      new ActionRowBuilder<TextInputBuilder>().addComponents(titleField),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(pasteField),
+    ];
+
+    const modal = new ModalBuilder()
+      .setTitle("Создать новую пасту")
+      .setCustomId(customId)
+      .setComponents(title, paste);
+
+    return modal;
+  }
+
   async updateSlash(interaction: CommandInteraction, pasteId: string) {
     const usrname = UsersUtility.getUsername(interaction.user);
     const avatar = UsersUtility.getAvatar(interaction.user);
@@ -177,6 +217,7 @@ export class PasteService {
       .setThumbnail(avatar)
       .setFooter({ text: usrname, iconURL: avatar });
     const numPasteId = Number(pasteId);
+
     if (Number.isNaN(numPasteId)) {
       return interaction.reply({
         embeds: [
@@ -203,43 +244,22 @@ export class PasteService {
       });
     }
 
-    const modal = new ModalBuilder()
-      .setCustomId(PasteUpdateModalId)
-      .setTitle("Обновление пасты");
-    const pasteTitleField =
-      new ActionRowBuilder<TextInputBuilder>().addComponents(
-        new TextInputBuilder()
-          .setCustomId("title")
-          .setLabel("Название")
-          .setValue(existed.data.title)
-          .setMinLength(1)
-          .setMaxLength(MaxPasteTitleLength)
-          .setStyle(TextInputStyle.Short)
-      );
-    const pasteTextField =
-      new ActionRowBuilder<TextInputBuilder>().addComponents(
-        new TextInputBuilder()
-          .setCustomId("paste")
-          .setLabel("Текст пасты")
-          .setValue(existed.data.paste)
-          .setMinLength(1)
-          .setMaxLength(MaxPasteTextLength)
-          .setStyle(TextInputStyle.Paragraph)
-      );
+    const modal = this.buildCreationModal(PasteUpdateModalId, {
+      defaultPaste: existed.data.paste,
+      defaultTitle: existed.data.title,
+    });
 
     const pasteIdField = new ActionRowBuilder<TextInputBuilder>().addComponents(
       new TextInputBuilder()
         .setCustomId("pasteid")
-        .setLabel("Текст пасты")
+        .setLabel("Айди пасты")
         .setValue(existed.data.id.toString())
         .setPlaceholder("Если ты это видишь - верни как было")
         .setMinLength(1)
         .setStyle(TextInputStyle.Short)
     );
 
-    return interaction.showModal(
-      modal.addComponents(pasteTitleField, pasteTextField, pasteIdField)
-    );
+    return interaction.showModal(modal.addComponents(pasteIdField));
   }
 
   async updateModal(interaction: ModalSubmitInteraction) {

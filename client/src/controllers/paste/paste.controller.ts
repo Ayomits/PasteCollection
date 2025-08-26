@@ -1,11 +1,14 @@
 import {
   ApplicationCommandOptionType,
+  ApplicationCommandType,
   ApplicationIntegrationType,
   type CommandInteraction,
   InteractionContextType,
+  type MessageContextMenuCommandInteraction,
   type ModalSubmitInteraction,
 } from "discord.js";
 import {
+  ContextMenu,
   Discord,
   ModalComponent,
   Slash,
@@ -95,7 +98,25 @@ export class PasteController {
 
   @ModalComponent({ id: PasteCreateModalId })
   pasteCreateModal(interaction: ModalSubmitInteraction) {
-    return this.pasteService.createModal(interaction);
+    return this.pasteService.handleCreationModal(interaction);
+  }
+
+  @ContextMenu({
+    type: ApplicationCommandType.Message,
+    name: "Создать пасту",
+    dmPermission: true,
+    contexts: [
+      InteractionContextType.BotDM,
+      InteractionContextType.Guild,
+      InteractionContextType.PrivateChannel,
+    ],
+    integrationTypes: [
+      ApplicationIntegrationType.UserInstall,
+      ApplicationIntegrationType.GuildInstall,
+    ],
+  })
+  createPasteContext(interaction: MessageContextMenuCommandInteraction) {
+    return this.pasteService.createContext(interaction);
   }
 
   @Slash({
@@ -141,8 +162,6 @@ export class PasteController {
   pasteUpdateModal(interaction: ModalSubmitInteraction) {
     return this.pasteService.updateModal(interaction);
   }
-
-
 
   @Slash({
     name: "update",
