@@ -87,20 +87,6 @@ func (p *pasteRepository) FindOne(filter *dtos.PastesFilterDto) (*models.PasteMo
 	return &paste, nil
 }
 
-func (p *pasteRepository) Count(filter *dtos.PastesFilterDto) (*int, error) {
-	var rowCount int
-	condition, args := p.buildFilters(filter, 0, nil)
-	err := p.pool.
-		QueryRow(context.Background(), fmt.Sprintf(CountPasteSql, condition), args...).
-		Scan(&rowCount)
-
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
-	return &rowCount, nil
-}
-
 func (p *pasteRepository) FindMany(filter *dtos.PastesFilterDto, pagination *dtos.PaginationDto) ([]*models.PasteModel, error) {
 	condition, args := p.buildFilters(filter, 0, pagination)
 	rows, err := p.pool.Query(context.Background(), fmt.Sprintf(FindPasteSql, condition), args...)
@@ -135,6 +121,20 @@ func (p *pasteRepository) FindMany(filter *dtos.PastesFilterDto, pagination *dto
 	}
 
 	return pastes, nil
+}
+
+func (p *pasteRepository) Count(filter *dtos.PastesFilterDto) (*int, error) {
+	var rowCount int
+	condition, args := p.buildFilters(filter, 0, nil)
+	err := p.pool.
+		QueryRow(context.Background(), fmt.Sprintf(CountPasteSql, condition), args...).
+		Scan(&rowCount)
+
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	return &rowCount, nil
 }
 
 func (p *pasteRepository) Create(dto *dtos.PasteDto) (*models.PasteModel, error) {
@@ -261,10 +261,9 @@ func (p *pasteRepository) buildFilters(filter *dtos.PastesFilterDto, startFrom i
 		limit := 10
 		if pagination.Limit != nil {
 			limit = *pagination.Limit
-
 		}
 		position++
-		limitStr := fmt.Sprintf(" LIMIT $%d", position)
+		limitStr := fmt.Sprintf(" LIMIT $%d + 1", position)
 		condition += limitStr
 		args = append(args, limit)
 	}
