@@ -139,7 +139,7 @@ export class PasteService {
       async fetchInitial() {
         const { data } = await pastesApi.searchPaste({
           pagination: {
-            limit: 10,
+            limit: GlobalPaginationLimit,
           },
         });
         return data;
@@ -147,7 +147,7 @@ export class PasteService {
       async fetchNext(prev) {
         const { data } = await pastesApi.searchPaste({
           pagination: {
-            limit: 10,
+            limit: GlobalPaginationLimit,
             order: "next",
             startFrom: prev?.items?.[prev.items.length - 1]?.id,
           },
