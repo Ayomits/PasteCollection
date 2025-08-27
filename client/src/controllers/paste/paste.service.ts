@@ -178,9 +178,11 @@ export class PasteService {
               });
             }
 
-            return interaction.editReply({
+            interaction.editReply({
               embeds: [await this.buildInfoEmbed(paste.data)],
             });
+
+            await pastesApi.incrementViews(id);
           }
         }
       },
