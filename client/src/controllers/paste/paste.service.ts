@@ -101,12 +101,12 @@ export class PasteService {
                   new StringSelectMenuOptionBuilder()
                     .setValue(item.id.toString())
                     .setLabel(
-                      `Паста ${item.title.length > 32 ? item.title.slice(0, 29) + "..." : item.title}`,
-                    ),
-                ),
+                      `Паста ${item.title.length > 27 ? item.title.slice(0, 24) + "..." : item.title}`
+                    )
+                )
               )
               .setPlaceholder("Выберите пасту для просмотра")
-              .setCustomId(ViewPasteId),
+              .setCustomId(ViewPasteId)
           );
 
         const description =
@@ -221,7 +221,7 @@ export class PasteService {
           embed
             .setTitle(PasteCreateMessages.validation.internal.title)
             .setDescription(
-              PasteCreateMessages.validation.internal.description,
+              PasteCreateMessages.validation.internal.description
             ),
         ],
       });
@@ -254,7 +254,7 @@ export class PasteService {
           embed
             .setTitle(PasteCreateMessages.validation.internal.title)
             .setDescription(
-              PasteCreateMessages.validation.internal.description,
+              PasteCreateMessages.validation.internal.description
             ),
         ],
       });
@@ -271,7 +271,7 @@ export class PasteService {
 
   buildCreationModal(
     customId: string,
-    defaults?: { defaultTitle?: string; defaultPaste?: string },
+    defaults?: { defaultTitle?: string; defaultPaste?: string }
   ) {
     const titleField = new TextInputBuilder()
       .setCustomId("title")
@@ -340,7 +340,7 @@ export class PasteService {
           embed
             .setTitle(PasteUpdateMessages.validation.notExists.title)
             .setDescription(
-              PasteUpdateMessages.validation.notExists.description,
+              PasteUpdateMessages.validation.notExists.description
             ),
         ],
       });
@@ -358,7 +358,7 @@ export class PasteService {
         .setValue(existed.data.id.toString())
         .setPlaceholder("Если ты это видишь - верни как было")
         .setMinLength(1)
-        .setStyle(TextInputStyle.Short),
+        .setStyle(TextInputStyle.Short)
     );
 
     return interaction.showModal(modal.addComponents(pasteIdField));
@@ -426,7 +426,7 @@ export class PasteService {
       {
         title,
         paste,
-      },
+      }
     );
 
     if (!updated.success) {
@@ -503,7 +503,7 @@ export class PasteService {
 
   static async pasteIdAutocomplete(
     interaction: AutocompleteInteraction,
-    query: Partial<PasteQueryParams>,
+    query: Partial<PasteQueryParams>
   ) {
     try {
       const entries = await pastesApi.searchPaste({
@@ -517,7 +517,7 @@ export class PasteService {
         entries.data?.items?.map((item) => ({
           name: item.title,
           value: item.id.toString(),
-        })) ?? [],
+        })) ?? []
       );
     } catch {
       return interaction.respond([]).catch(console.error);
