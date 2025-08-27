@@ -9,7 +9,7 @@ export interface CreatePastePayload {
 export type UpdatePastePayload = Omit<CreatePastePayload, "userId">;
 
 export interface Paste {
-  id: number
+  id: number;
   title: string;
   paste: string;
   views: number;
@@ -24,7 +24,7 @@ export interface PasteFilter {
   userId: number;
   strict: boolean;
   pasteId: number;
-  socialId: string
+  socialId: string;
 }
 
 export interface PasteQueryParams {

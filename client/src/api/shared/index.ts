@@ -36,6 +36,10 @@ export interface Pagination {
   limit: PaginationLimit;
 }
 
+export type CountResponse = {
+  count: number;
+};
+
 export interface ListResponse<T> {
   items: T[];
   hasNext: boolean;

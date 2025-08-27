@@ -2,6 +2,7 @@ import {
   ApplicationCommandOptionType,
   ApplicationCommandType,
   ApplicationIntegrationType,
+  type ChatInputCommandInteraction,
   type CommandInteraction,
   InteractionContextType,
   type MessageContextMenuCommandInteraction,
@@ -73,7 +74,7 @@ export class PasteController {
       },
     })
     pasteId: string,
-    interaction: CommandInteraction
+    interaction: CommandInteraction,
   ) {
     return this.pasteService.infoSlash(interaction, pasteId);
   }
@@ -120,6 +121,24 @@ export class PasteController {
   }
 
   @Slash({
+    name: "global",
+    description: "Все пасты",
+    dmPermission: true,
+    contexts: [
+      InteractionContextType.BotDM,
+      InteractionContextType.Guild,
+      InteractionContextType.PrivateChannel,
+    ],
+    integrationTypes: [
+      ApplicationIntegrationType.UserInstall,
+      ApplicationIntegrationType.GuildInstall,
+    ],
+  })
+  async globalSlash(interaction: ChatInputCommandInteraction) {
+    return this.pasteService.globalSlash(interaction);
+  }
+
+  @Slash({
     name: "delete",
     description: "Удалить пасту",
     dmPermission: true,
@@ -153,7 +172,7 @@ export class PasteController {
       },
     })
     pasteId: string,
-    interaction: CommandInteraction
+    interaction: CommandInteraction,
   ) {
     return this.pasteService.deleteSlash(interaction, pasteId);
   }
@@ -197,7 +216,7 @@ export class PasteController {
       },
     })
     pasteId: string,
-    interaction: CommandInteraction
+    interaction: CommandInteraction,
   ) {
     return this.pasteService.updateSlash(interaction, pasteId);
   }

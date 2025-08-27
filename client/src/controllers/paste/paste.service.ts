@@ -1,31 +1,38 @@
 import {
   ActionRowBuilder,
   type AutocompleteInteraction,
+  bold,
+  type ChatInputCommandInteraction,
   type CommandInteraction,
   type MessageContextMenuCommandInteraction,
   ModalBuilder,
   type ModalSubmitInteraction,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js";
 import { injectable } from "tsyringe";
 
 import { pastesApi } from "#api/pastes/pastes.api.js";
-import type { PasteQueryParams } from "#api/pastes/pastes.types.js";
-import { PaginationLimit } from "#api/shared/index.js";
+import type { Paste, PasteQueryParams } from "#api/pastes/pastes.types.js";
+import { type ListResponse, PaginationLimit } from "#api/shared/index.js";
 import { usersApi } from "#api/users/users.api.js";
 import { PasteCreateMessages } from "#message/paste-create.messages.js";
 import { PasteDeleteMessages } from "#message/paste-delete.messages.js";
 import { PasteInfoMessages } from "#message/paste-info.messages.js";
 import { PasteUpdateMessages } from "#message/paste-update.messages.js";
+import { DynamicPagination } from "#pagination/index.js";
 import { EmbedBuilder } from "#utils/embed.builder.js";
 import { UsersUtility } from "#utils/user.utility.js";
 
 import {
+  GlobalPaginationLimit,
   MaxPasteTextLength,
   MaxPasteTitleLength,
   PasteCreateModalId,
   PasteUpdateModalId,
+  ViewPasteId,
 } from "./paste.const.js";
 
 @injectable()
@@ -66,20 +73,115 @@ export class PasteService {
 
     await interaction
       .editReply({
-        embeds: [
-          embed
-            .setTitle(PasteInfoMessages.success.title(paste.data.title))
-            .setFields(await PasteInfoMessages.success.fields(paste.data))
-            .setFooter({
-              text: PasteInfoMessages.success.footer.text(paste.data.views + 1),
-            }),
-        ],
+        embeds: [await this.buildInfoEmbed(paste.data)],
       })
       .catch(console.error);
 
     return await pastesApi.incrementViews(paste.data.id);
   }
 
+  private async buildInfoEmbed(paste: Paste) {
+    const embed = new EmbedBuilder();
+    return embed
+      .setTitle(PasteInfoMessages.success.title(paste.title))
+      .setFields(await PasteInfoMessages.success.fields(paste))
+      .setFooter({
+        text: PasteInfoMessages.success.footer.text(paste.views + 1),
+      });
+  }
+
+  async globalSlash(interaction: ChatInputCommandInteraction) {
+    const pagination = new DynamicPagination<ListResponse<Paste>>({
+      buildMessage(data, page) {
+        const pastesSelect =
+          new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+            new StringSelectMenuBuilder()
+              .setOptions(
+                data.items.map((item) =>
+                  new StringSelectMenuOptionBuilder()
+                    .setValue(item.id.toString())
+                    .setLabel(
+                      `Паста ${item.title.length > 32 ? item.title.slice(0, 29) + "..." : item.title}`,
+                    ),
+                ),
+              )
+              .setPlaceholder("Выберите пасту для просмотра")
+              .setCustomId(ViewPasteId),
+          );
+
+        const description =
+          data.items.length > 0
+            ? data.items
+                .map((item, idx) => {
+                  const position = idx + page * GlobalPaginationLimit;
+                  return [
+                    `${bold(`${position}.`)} ${item.title}`,
+                    `ID: ${item.id}`,
+                    `Просмотры: ${item.views}`,
+                    "",
+                  ];
+                })
+                .flatMap((item) => item.join("\n"))
+                .join("\n")
+            : "Нет данных для отображения";
+
+        const embed = new EmbedBuilder()
+          .setTitle("Пасты")
+          .setDescription(description)
+          .setDefaults(interaction.user);
+
+        return { embeds: [embed], components: [pastesSelect] };
+      },
+      async fetchInitial() {
+        const { data } = await pastesApi.searchPaste({
+          pagination: {
+            limit: 10,
+          },
+        });
+        return data;
+      },
+      async fetchNext(prev) {
+        const { data } = await pastesApi.searchPaste({
+          pagination: {
+            limit: 10,
+            order: "next",
+            startFrom: prev?.items?.[prev.items.length - 1]?.id,
+          },
+        });
+        return data;
+      },
+      canFetchNext(prev) {
+        return prev?.hasNext;
+      },
+    });
+
+    return pagination.send(interaction, {
+      filter: (i) => i.user.id === interaction.user.id,
+      callback: async (interaction) => {
+        if (interaction.isMessageComponent()) {
+          const customId = interaction.customId;
+
+          if (customId === ViewPasteId && interaction.isStringSelectMenu()) {
+            await interaction.deferReply();
+            const id = Number(interaction.values[0]);
+            const paste = await pastesApi.findSignlePaste({ pasteId: id });
+
+            if (!paste.data || !paste.success) {
+              return interaction.editReply({
+                content: "Этой пасты уже не существует",
+              });
+            }
+
+            return interaction.editReply({
+              embeds: [await this.buildInfoEmbed(paste.data)],
+            });
+          }
+        }
+      },
+    });
+  }
+
+  // Создание пасты
   createSlash(interaction: CommandInteraction) {
     const modal = this.buildCreationModal(PasteCreateModalId);
     return interaction.showModal(modal);
@@ -119,7 +221,7 @@ export class PasteService {
           embed
             .setTitle(PasteCreateMessages.validation.internal.title)
             .setDescription(
-              PasteCreateMessages.validation.internal.description
+              PasteCreateMessages.validation.internal.description,
             ),
         ],
       });
@@ -152,7 +254,7 @@ export class PasteService {
           embed
             .setTitle(PasteCreateMessages.validation.internal.title)
             .setDescription(
-              PasteCreateMessages.validation.internal.description
+              PasteCreateMessages.validation.internal.description,
             ),
         ],
       });
@@ -169,7 +271,7 @@ export class PasteService {
 
   buildCreationModal(
     customId: string,
-    defaults?: { defaultTitle?: string; defaultPaste?: string }
+    defaults?: { defaultTitle?: string; defaultPaste?: string },
   ) {
     const titleField = new TextInputBuilder()
       .setCustomId("title")
@@ -238,7 +340,7 @@ export class PasteService {
           embed
             .setTitle(PasteUpdateMessages.validation.notExists.title)
             .setDescription(
-              PasteUpdateMessages.validation.notExists.description
+              PasteUpdateMessages.validation.notExists.description,
             ),
         ],
       });
@@ -256,7 +358,7 @@ export class PasteService {
         .setValue(existed.data.id.toString())
         .setPlaceholder("Если ты это видишь - верни как было")
         .setMinLength(1)
-        .setStyle(TextInputStyle.Short)
+        .setStyle(TextInputStyle.Short),
     );
 
     return interaction.showModal(modal.addComponents(pasteIdField));
@@ -324,7 +426,7 @@ export class PasteService {
       {
         title,
         paste,
-      }
+      },
     );
 
     if (!updated.success) {
@@ -401,7 +503,7 @@ export class PasteService {
 
   static async pasteIdAutocomplete(
     interaction: AutocompleteInteraction,
-    query: Partial<PasteQueryParams>
+    query: Partial<PasteQueryParams>,
   ) {
     try {
       const entries = await pastesApi.searchPaste({
@@ -415,7 +517,7 @@ export class PasteService {
         entries.data?.items?.map((item) => ({
           name: item.title,
           value: item.id.toString(),
-        })) ?? []
+        })) ?? [],
       );
     } catch {
       return interaction.respond([]).catch(console.error);

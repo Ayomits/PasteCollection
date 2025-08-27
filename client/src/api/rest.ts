@@ -57,9 +57,7 @@ const LogResponseInterceptor: ResponseInterceptor<unknown> = (res) => {
   if (!success) {
     logger.error(`${options.method} | ${options.path} | failure request`);
   } else {
-    logger.success(
-      `${options.method} | ${options.path} | succesful request`
-    );
+    logger.success(`${options.method} | ${options.path} | succesful request`);
   }
   return res;
 };

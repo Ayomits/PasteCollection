@@ -14,7 +14,7 @@ import type {
 
 export class UsersApi extends BaseApi {
   async findOrCreate(
-    usr: DiscordUser
+    usr: DiscordUser,
   ): Promise<ApiResponse<User, unknown, HttpMethodType>> {
     const existed = await this.findSignleUser({
       socialId: usr.id,
@@ -45,7 +45,7 @@ export class UsersApi extends BaseApi {
       "/users" + this.getQuery(f),
       {
         body: p,
-      }
+      },
     );
   }
 

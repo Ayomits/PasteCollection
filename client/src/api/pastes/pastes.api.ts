@@ -1,6 +1,6 @@
 import { rest } from "#api/rest.js";
 import { BaseApi } from "#api/shared/base.js";
-import type { ListResponse } from "#api/shared/index.js";
+import type { CountResponse, ListResponse } from "#api/shared/index.js";
 
 import type {
   CreatePastePayload,
@@ -13,12 +13,19 @@ import type {
 export class PastesApi extends BaseApi {
   async searchPaste(q: Partial<PasteQueryParams>) {
     return await rest.get<ListResponse<Paste>>(
-      `/pastes/search` + this.getQuery(q)
+      `/pastes/search` + this.getQuery(q),
     );
   }
 
   async findSignlePaste(f: Partial<PasteFilter>) {
     return await rest.get<Paste>(`/pastes` + this.getQuery(f), {});
+  }
+
+  async countPastes(f?: Partial<PasteFilter>) {
+    return await rest.get<CountResponse>(
+      `/pastes/count` + this.getQuery(f),
+      {},
+    );
   }
 
   async createPaste(p: CreatePastePayload) {
@@ -32,12 +39,14 @@ export class PastesApi extends BaseApi {
       "/pastes" + this.getQuery(f),
       {
         body: p,
-      }
+      },
     );
   }
 
   async incrementViews(id: number) {
-    return await rest.patch<Paste, UpdatePastePayload>(`/pastes/${id}/increment`);
+    return await rest.patch<Paste, UpdatePastePayload>(
+      `/pastes/${id}/increment`,
+    );
   }
 
   async deletePaste(f: Partial<PasteFilter>) {
