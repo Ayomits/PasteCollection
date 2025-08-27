@@ -48,6 +48,7 @@ func ConnectRoutes(app *fiber.App) {
 	pasteController := controllers.NewPasteController(pasteService)
 
 	pastes.Get("/", pasteController.FindPaste)
+	pastes.Get("/count", pasteController.Count)
 	pastes.Get("/search", pasteController.SearchPaste)
 	pastes.Post("/", pasteController.CreatePaste)
 	pastes.Patch(":id/increment", pasteController.Increment)

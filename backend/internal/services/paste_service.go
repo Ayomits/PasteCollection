@@ -16,6 +16,7 @@ import (
 type PasteService interface {
 	Create(c *fiber.Ctx) error
 	Find(c *fiber.Ctx) error
+	Count(c *fiber.Ctx) error
 	Increment(c *fiber.Ctx) error
 	Search(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
@@ -28,6 +29,28 @@ type pasteService struct {
 
 func NewPasteService(r repositories.PasteRepository) PasteService {
 	return &pasteService{pasteRepository: r}
+}
+
+func (p *pasteService) Count(c *fiber.Ctx) error {
+	queryObj, err := querymap.FromURLStringToStruct[dtos.PastesFilterDto](c.BaseURL() + c.OriginalURL())
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
+	}
+
+	violations := validators.AppValidatorInstance.Validate(queryObj)
+
+	if violations != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(responses.NewValidationError(violations.Message, violations.Violations))
+	}
+
+	count, err := p.pasteRepository.Count(queryObj)
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(responses.NewCountResponse(*count))
 }
 
 func (p *pasteService) Increment(c *fiber.Ctx) error {

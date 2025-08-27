@@ -16,6 +16,7 @@ import (
 const (
 	CreatePasteSql = "INSERT INTO pastes (title, paste, user_id) VALUES ($1, $2, $3) RETURNING id, title, paste, views, user_id, created_at, updated_at"
 	FindPasteSql   = "SELECT id, title, paste, views, user_id, created_at, updated_at FROM pastes %s"
+	CountPasteSql  = "SELECT COUNT(id) FROM pastes %s"
 	IncrementViews = "UPDATE pastes SET views=views+1 WHERE id=$1 RETURNING id, title, paste, views, user_id, created_at, updated_at"
 	UpdatePasteSql = "UPDATE pastes SET title=$1, paste=$2, updated_at=now() %s RETURNING id, title, paste, views, user_id, created_at, updated_at"
 	DeletePasteSql = "DELETE FROM pastes %s"
@@ -24,6 +25,7 @@ const (
 type PasteRepository interface {
 	FindOne(filter *dtos.PastesFilterDto) (*models.PasteModel, error)
 	FindMany(filter *dtos.PastesFilterDto, pagination *dtos.PaginationDto) ([]*models.PasteModel, error)
+	Count(filter *dtos.PastesFilterDto) (*int, error)
 	Create(dto *dtos.PasteDto) (*models.PasteModel, error)
 	Update(filter *dtos.PastesFilterDto, dto *dtos.UpdatePasteDto) (*models.PasteModel, error)
 	IncrementViews(pasteId int) (*models.PasteModel, error)
@@ -83,6 +85,20 @@ func (p *pasteRepository) FindOne(filter *dtos.PastesFilterDto) (*models.PasteMo
 	}
 
 	return &paste, nil
+}
+
+func (p *pasteRepository) Count(filter *dtos.PastesFilterDto) (*int, error) {
+	var rowCount int
+	condition, args := p.buildFilters(filter, 0, nil)
+	err := p.pool.
+		QueryRow(context.Background(), fmt.Sprintf(CountPasteSql, condition), args...).
+		Scan(&rowCount)
+
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	return &rowCount, nil
 }
 
 func (p *pasteRepository) FindMany(filter *dtos.PastesFilterDto, pagination *dtos.PaginationDto) ([]*models.PasteModel, error) {

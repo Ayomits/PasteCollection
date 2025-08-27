@@ -9,6 +9,7 @@ import (
 type PasteController interface {
 	FindPaste(c *fiber.Ctx) error
 	SearchPaste(c *fiber.Ctx) error
+	Count(c *fiber.Ctx) error
 	CreatePaste(c *fiber.Ctx) error
 	DeletePaste(c *fiber.Ctx) error
 	UpdatePaste(c *fiber.Ctx) error
@@ -23,8 +24,12 @@ func NewPasteController(pasteService services.PasteService) PasteController {
 	return &pasteController{pasteService: pasteService}
 }
 
+func (p *pasteController) Count(c *fiber.Ctx) error {
+	return p.pasteService.Count(c)
+}
+
 func (p *pasteController) Increment(c *fiber.Ctx) error {
-	return p.pasteService.Increment(c);
+	return p.pasteService.Increment(c)
 }
 
 func (p *pasteController) FindPaste(c *fiber.Ctx) error {
