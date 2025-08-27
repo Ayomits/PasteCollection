@@ -91,6 +91,7 @@ export class PasteService {
   }
 
   async globalSlash(interaction: ChatInputCommandInteraction) {
+    await interaction.deferReply();
     const pagination = new DynamicPagination<ListResponse<Paste>>({
       buildMessage(data, page) {
         const pastesSelect =
