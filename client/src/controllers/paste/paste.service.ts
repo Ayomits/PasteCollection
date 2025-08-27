@@ -130,7 +130,10 @@ export class PasteService {
           .setDescription(description)
           .setDefaults(interaction.user);
 
-        return { embeds: [embed], components: [pastesSelect] };
+        return {
+          embeds: [embed],
+          components: data.items.length ? [pastesSelect] : [],
+        };
       },
       async fetchInitial() {
         const { data } = await pastesApi.searchPaste({
