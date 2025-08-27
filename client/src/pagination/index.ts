@@ -35,7 +35,7 @@ interface DynamicPaginationOptions<T> {
   fetchInitial: () => T | Promise<T>;
   buildMessage: (
     data: T,
-    pageNumber: number,
+    pageNumber: number
   ) =>
     | Promise<InteractionEditReplyOptions | InteractionReplyOptions>
     | InteractionReplyOptions
@@ -57,7 +57,7 @@ export class DynamicPagination<T> {
     interaction: Interaction,
     options?: InteractionCollectorOptions<CollectedInteraction, CacheType> & {
       callback?: (interaction: Interaction) => unknown | Promise<unknown>;
-    },
+    }
   ) {
     if (interaction.isRepliable()) {
       const { buildMessage, fetchInitial, canFetchNext } = this.config;
@@ -68,9 +68,11 @@ export class DynamicPagination<T> {
       this.data.push(initial);
       this.messages.push(payload);
 
+      let pageNumber = 0;
+
       const mergeComponents = (
         payload: InteractionEditReplyOptions | InteractionReplyOptions,
-        canNext: boolean,
+        canNext: boolean
       ) => {
         const rows = [];
 
@@ -80,9 +82,9 @@ export class DynamicPagination<T> {
 
         rows.push(
           this.buildButtons({
-            prev: true,
+            prev: pageNumber === 0,
             next: canNext,
-          }),
+          })
         );
 
         return rows;
@@ -101,8 +103,6 @@ export class DynamicPagination<T> {
           (options?.filter ? options?.filter(i, c) : true),
         ...options,
       });
-
-      let pageNumber = 0;
 
       collector.on("collect", async (interaction) => {
         const customId = interaction.customId;
@@ -176,7 +176,7 @@ export class DynamicPagination<T> {
           }
 
           return builder;
-        }),
+        })
       );
     }
 
@@ -194,13 +194,13 @@ export class DynamicPagination<T> {
 
     return new ActionRowBuilder<ButtonBuilder>().addComponents(
       defaultPrevButton,
-      defaultNextButton,
+      defaultNextButton
     );
   }
 
   private async sendReply(
     interaction: RepliableInteraction,
-    options: InteractionReplyOptions,
+    options: InteractionReplyOptions
   ) {
     const tryEdit = () => {
       try {
