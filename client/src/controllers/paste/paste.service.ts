@@ -140,6 +140,7 @@ export class PasteService {
         const { data } = await pastesApi.searchPaste({
           pagination: {
             limit: GlobalPaginationLimit,
+            sort: "DESC",
           },
         });
         return data;
@@ -150,6 +151,7 @@ export class PasteService {
             limit: GlobalPaginationLimit,
             order: "next",
             startFrom: prev?.items?.[prev.items.length - 1]?.id,
+            sort: "DESC",
           },
         });
         return data;
