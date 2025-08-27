@@ -114,7 +114,7 @@ export class PasteService {
           data.items.length > 0
             ? data.items
                 .map((item, idx) => {
-                  const position = idx + page * GlobalPaginationLimit;
+                  const position = idx + 1 + page * GlobalPaginationLimit;
                   return [
                     `${bold(`${position}.`)} ${item.title}`,
                     `ID: ${item.id}`,
