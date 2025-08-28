@@ -35,6 +35,7 @@ func NewPasteController(pasteService services.PasteService) PasteController {
 //	@Success		201		{object}	models.PasteModel	"Созданная паста"
 //	@Failure		401		{object}	responses.UnauthorizedError
 //	@Failure		422		{object}	responses.ValidationError
+//	@Failure		429		{object}	responses.RateLimitError
 //	@Failure		500		{object}	responses.InternalError
 //	@Router			/api/pastes [post]
 //	@Security		ApiKeyAuth
@@ -58,6 +59,7 @@ func (p *pasteController) CreatePaste(c *fiber.Ctx) error {
 //	@Failure		404			{object}	responses.NotFoundError
 //	@Failure		401			{object}	responses.UnauthorizedError
 //	@Failure		422			{object}	responses.ValidationError
+//	@Failure		429			{object}	responses.RateLimitError
 //	@Failure		500			{object}	responses.InternalError
 //	@Router			/api/pastes [get]
 //	@Security		ApiKeyAuth
@@ -75,7 +77,7 @@ func (p *pasteController) FindSinglePaste(c *fiber.Ctx) error {
 //	@Param			pagination[sort]		query		string				false	"Сортировка результатов"	default(DESC)
 //	@Param			pagination[startFrom]	query		int					false	"С какого айди начинать"	default(10)
 //	@Param			pagination[limit]		query		int					true	"Лимит результатов"			default(10)
-//	@Param			pagination[order]		query		string					false	"Сторона"					default(next)
+//	@Param			pagination[order]		query		string				false	"Сторона"					default(next)
 //	@Param			filter[search]			query		string				false	"Поиск по названию"
 //	@Param			filter[userId]			query		int					false	"Айди автора"
 //	@Param			filter[socialId]		query		string				false	"Айди в соц. сети"
@@ -84,6 +86,7 @@ func (p *pasteController) FindSinglePaste(c *fiber.Ctx) error {
 //	@Success		200						{array}		models.PasteModel	"Список найденных паст"
 //	@Failure		401						{object}	responses.UnauthorizedError
 //	@Failure		422						{object}	responses.ValidationError
+//	@Failure		429						{object}	responses.RateLimitError
 //	@Failure		500						{object}	responses.InternalError
 //	@Router			/api/pastes/search [get]
 //	@Security		ApiKeyAuth
@@ -106,6 +109,7 @@ func (p *pasteController) SearchPaste(c *fiber.Ctx) error {
 //	@Success		200			{object}	responses.CountResponse	"Количество паст"
 //	@Failure		401			{object}	responses.UnauthorizedError
 //	@Failure		422			{object}	responses.ValidationError
+//	@Failure		429			{object}	responses.RateLimitError
 //	@Failure		500			{object}	responses.InternalError
 //	@Router			/api/pastes/count [get]
 //	@Security		ApiKeyAuth
@@ -130,6 +134,7 @@ func (p *pasteController) Count(c *fiber.Ctx) error {
 //	@Failure		404			{object}	responses.NotFoundError
 //	@Failure		401			{object}	responses.UnauthorizedError
 //	@Failure		422			{object}	responses.ValidationError
+//	@Failure		429			{object}	responses.RateLimitError
 //	@Failure		500			{object}	responses.InternalError
 //	@Router			/api/pastes [put]
 //	@Security		ApiKeyAuth
@@ -148,6 +153,7 @@ func (p *pasteController) UpdatePaste(c *fiber.Ctx) error {
 //	@Success					200	{object}	models.PasteModel	"Обновленная паста"
 //	@Failure					401	{object}	responses.UnauthorizedError
 //	@Failure					422	{object}	responses.ValidationError
+//	@Failure					429	{object}	responses.RateLimitError
 //	@Failure					500	{object}	responses.InternalError
 //	@Param						id	path		int	true	"ID пасты"
 //	@Router						/api/pastes/{id}/increment [patch]
@@ -172,6 +178,7 @@ func (p *pasteController) Increment(c *fiber.Ctx) error {
 //	@Failure		401	{object}	responses.UnauthorizedError
 //	@Failure		404	{object}	responses.NotFoundError
 //	@Failure		422	{object}	responses.ValidationError
+//	@Failure		429	{object}	responses.RateLimitError
 //	@Failure		500	{object}	responses.InternalError
 //	@Router			/api/pastes [delete]
 //	@Security		ApiKeyAuth

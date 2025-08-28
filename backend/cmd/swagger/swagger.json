@@ -83,6 +83,12 @@
                             "$ref": "#/definitions/responses.ValidationError"
                         }
                     },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/responses.RateLimitError"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -175,6 +181,12 @@
                             "$ref": "#/definitions/responses.ValidationError"
                         }
                     },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/responses.RateLimitError"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -228,6 +240,12 @@
                         "description": "Unprocessable Entity",
                         "schema": {
                             "$ref": "#/definitions/responses.ValidationError"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/responses.RateLimitError"
                         }
                     },
                     "500": {
@@ -310,6 +328,12 @@
                             "$ref": "#/definitions/responses.ValidationError"
                         }
                     },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/responses.RateLimitError"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -387,6 +411,12 @@
                         "description": "Unprocessable Entity",
                         "schema": {
                             "$ref": "#/definitions/responses.ValidationError"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/responses.RateLimitError"
                         }
                     },
                     "500": {
@@ -500,6 +530,12 @@
                             "$ref": "#/definitions/responses.ValidationError"
                         }
                     },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/responses.RateLimitError"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -553,6 +589,12 @@
                         "description": "Unprocessable Entity",
                         "schema": {
                             "$ref": "#/definitions/responses.ValidationError"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/responses.RateLimitError"
                         }
                     },
                     "500": {
@@ -645,6 +687,12 @@
                         "description": "Unprocessable Entity",
                         "schema": {
                             "$ref": "#/definitions/responses.ValidationError"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/responses.RateLimitError"
                         }
                     },
                     "500": {
@@ -746,6 +794,12 @@
                             "$ref": "#/definitions/responses.ValidationError"
                         }
                     },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/responses.RateLimitError"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -799,6 +853,12 @@
                         "description": "Unprocessable Entity",
                         "schema": {
                             "$ref": "#/definitions/responses.ValidationError"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/responses.RateLimitError"
                         }
                     },
                     "500": {
@@ -889,6 +949,12 @@
                         "description": "Unprocessable Entity",
                         "schema": {
                             "$ref": "#/definitions/responses.ValidationError"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/responses.RateLimitError"
                         }
                     },
                     "500": {
@@ -1055,6 +1121,14 @@
             }
         },
         "responses.NotFoundError": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "responses.RateLimitError": {
             "type": "object",
             "properties": {
                 "message": {

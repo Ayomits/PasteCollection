@@ -5,12 +5,16 @@ import (
 	"api/internal/database"
 	"api/internal/middlewares"
 	"api/internal/repositories"
+	"api/internal/responses"
 	"api/internal/services"
 
 	"github.com/gofiber/swagger"
 
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -23,6 +27,16 @@ func NewFiberApp() *fiber.App {
 	app.Use(recover.New())
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
+	}))
+	app.Use(limiter.New(limiter.Config{
+		Expiration: 1 * time.Second,
+		Max:        5,
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.IP()
+		},
+		LimitReached: func(c *fiber.Ctx) error {
+			return c.Status(fiber.StatusTooManyRequests).JSON(responses.NewRateLimitError())
+		},
 	}))
 
 	return app

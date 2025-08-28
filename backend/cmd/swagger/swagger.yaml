@@ -111,6 +111,11 @@ definitions:
       message:
         type: string
     type: object
+  responses.RateLimitError:
+    properties:
+      message:
+        type: string
+    type: object
   responses.UnauthorizedError:
     properties:
       message:
@@ -182,6 +187,10 @@ paths:
           description: Unprocessable Entity
           schema:
             $ref: '#/definitions/responses.ValidationError'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/responses.RateLimitError'
         "500":
           description: Internal Server Error
           schema:
@@ -236,6 +245,10 @@ paths:
           description: Unprocessable Entity
           schema:
             $ref: '#/definitions/responses.ValidationError'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/responses.RateLimitError'
         "500":
           description: Internal Server Error
           schema:
@@ -271,6 +284,10 @@ paths:
           description: Unprocessable Entity
           schema:
             $ref: '#/definitions/responses.ValidationError'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/responses.RateLimitError'
         "500":
           description: Internal Server Error
           schema:
@@ -331,6 +348,10 @@ paths:
           description: Unprocessable Entity
           schema:
             $ref: '#/definitions/responses.ValidationError'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/responses.RateLimitError'
         "500":
           description: Internal Server Error
           schema:
@@ -366,6 +387,10 @@ paths:
           description: Unprocessable Entity
           schema:
             $ref: '#/definitions/responses.ValidationError'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/responses.RateLimitError'
         "500":
           description: Internal Server Error
           schema:
@@ -417,6 +442,10 @@ paths:
           description: Unprocessable Entity
           schema:
             $ref: '#/definitions/responses.ValidationError'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/responses.RateLimitError'
         "500":
           description: Internal Server Error
           schema:
@@ -491,6 +520,10 @@ paths:
           description: Unprocessable Entity
           schema:
             $ref: '#/definitions/responses.ValidationError'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/responses.RateLimitError'
         "500":
           description: Internal Server Error
           schema:
@@ -551,6 +584,10 @@ paths:
           description: Unprocessable Entity
           schema:
             $ref: '#/definitions/responses.ValidationError'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/responses.RateLimitError'
         "500":
           description: Internal Server Error
           schema:
@@ -610,6 +647,10 @@ paths:
           description: Unprocessable Entity
           schema:
             $ref: '#/definitions/responses.ValidationError'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/responses.RateLimitError'
         "500":
           description: Internal Server Error
           schema:
@@ -645,6 +686,10 @@ paths:
           description: Unprocessable Entity
           schema:
             $ref: '#/definitions/responses.ValidationError'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/responses.RateLimitError'
         "500":
           description: Internal Server Error
           schema:
@@ -710,6 +755,10 @@ paths:
           description: Unprocessable Entity
           schema:
             $ref: '#/definitions/responses.ValidationError'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/responses.RateLimitError'
         "500":
           description: Internal Server Error
           schema:

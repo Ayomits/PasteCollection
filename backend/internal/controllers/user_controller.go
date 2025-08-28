@@ -38,6 +38,7 @@ func NewUserController(s services.UserService) UserController {
 //	@Failure		401			{object}	responses.UnauthorizedError
 //	@Failure		404			{object}	responses.NotFoundError
 //	@Failure		422			{object}	responses.ValidationError
+//	@Failure		429			{object}	responses.RateLimitError
 //	@Failure		500			{object}	responses.InternalError
 //	@Router			/api/users [get]
 //	@Security		ApiKeyAuth
@@ -56,6 +57,7 @@ func (u *userController) FindUser(c *fiber.Ctx) error {
 //	@Success		200		{object}	models.UserModel
 //	@Failure		401		{object}	responses.UnauthorizedError
 //	@Failure		422		{object}	responses.ValidationError
+//	@Failure		429		{object}	responses.RateLimitError
 //	@Failure		500		{object}	responses.InternalError
 //	@Router			/api/users [post]
 //	@Security		ApiKeyAuth
@@ -81,6 +83,7 @@ func (u *userController) CreateUser(c *fiber.Ctx) error {
 //	@Failure		401			{object}	responses.UnauthorizedError
 //	@Failure		404			{object}	responses.NotFoundError
 //	@Failure		422			{object}	responses.ValidationError
+//	@Failure		429			{object}	responses.RateLimitError
 //	@Failure		500			{object}	responses.InternalError
 //	@Router			/api/users [put]
 //	@Security		ApiKeyAuth
@@ -105,6 +108,7 @@ func (u *userController) UpdateUser(c *fiber.Ctx) error {
 //	@Failure		401			{object}	responses.UnauthorizedError
 //	@Failure		404			{object}	responses.NotFoundError
 //	@Failure		422			{object}	responses.ValidationError
+//	@Failure		429			{object}	responses.RateLimitError
 //	@Failure		500			{object}	responses.InternalError
 //	@Router			/api/users [delete]
 //	@Security		ApiKeyAuth
