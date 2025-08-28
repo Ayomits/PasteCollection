@@ -9,8 +9,12 @@ init:
 
 update_app:
 	docker exec -it pastcollection-bot pnpm install
-	docker exec -it pastcollection-backend go mod vendor
 	docker exec -it pastcollection-backend go install github.com/pressly/goose/v3/cmd/goose@latest
+	docker exec -it pastcollection-backend go install github.com/swaggo/swag/cmd/swag@latest
+	docker exec -it pastcollection-backend go mod vendor
+
+swagger_init:
+	docker exec -it pastcollection-backend ./scripts/swag.sh
 
 init_var:
 	mkdir -p ./var/storage/postgres_data
@@ -25,7 +29,7 @@ restart:
 	docker compose restart
 
 build_docker: init_var
-	docker compose build
+	docker compose build --no-cache
 
 migrations_create:
 	@read -p "Enter migration name: " name; \
