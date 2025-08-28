@@ -198,7 +198,7 @@ func (p *pasteService) Search(c *fiber.Ctx) error {
 		limit = *queryObj.Pagination.Limit
 	}
 
-	items := entries[0:limit]
+	items := entries[:min(len(entries), limit)]
 
 	return c.Status(fiber.StatusOK).JSON(responses.NewPaginationResponse(&items, len(entries) > limit))
 }
