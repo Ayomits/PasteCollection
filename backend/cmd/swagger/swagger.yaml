@@ -432,7 +432,7 @@ paths:
       - application/json
       description: Поиск паст по различным критериям
       parameters:
-      - default: '"DESC"'
+      - default: DESC
         description: Сортировка результатов
         in: query
         name: pagination[sort]
@@ -448,10 +448,11 @@ paths:
         name: pagination[limit]
         required: true
         type: integer
-      - description: Сторона
+      - default: next
+        description: Сторона
         in: query
         name: pagination[order]
-        type: integer
+        type: string
       - description: Поиск по названию
         in: query
         name: filter[search]

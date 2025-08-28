@@ -427,7 +427,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "default": "\"DESC\"",
+                        "default": "DESC",
                         "description": "Сортировка результатов",
                         "name": "pagination[sort]",
                         "in": "query"
@@ -448,7 +448,8 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
+                        "default": "next",
                         "description": "Сторона",
                         "name": "pagination[order]",
                         "in": "query"
