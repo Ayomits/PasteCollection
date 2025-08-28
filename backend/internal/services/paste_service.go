@@ -159,6 +159,12 @@ func (p *pasteService) Find(c *fiber.Ctx) error {
 		log.Error(err)
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Failed to parse query..."))
 	}
+
+	violations := validators.AppValidatorInstance.Validate(queryObj)
+	if violations != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(violations)
+	}
+
 	existed, err := p.pasteRepository.FindOne(queryObj)
 
 	if err != nil {
@@ -179,6 +185,11 @@ func (p *pasteService) Search(c *fiber.Ctx) error {
 	if err != nil {
 		log.Error(err)
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Failed to parse query..."))
+	}
+
+	violations := validators.AppValidatorInstance.Validate(queryObj)
+	if violations != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(violations)
 	}
 
 	entries, err := p.pasteRepository.FindMany(queryObj.Filter, queryObj.Pagination)
@@ -207,15 +218,15 @@ func (p *pasteService) Update(c *fiber.Ctx) error {
 	var body dtos.UpdatePasteDto
 
 	queryObj, err := querymap.FromURLStringToStruct[dtos.PastesFilterDto](c.BaseURL() + c.OriginalURL())
-	filterViolations := validators.AppValidatorInstance.Validate(queryObj)
+	violations := validators.AppValidatorInstance.Validate(queryObj)
 
 	if err != nil {
 		log.Error(err)
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Failed to parse query..."))
 	}
 
-	if filterViolations != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(filterViolations)
+	if violations != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(violations)
 	}
 
 	if p.isEmptyFilter(queryObj) {
@@ -238,10 +249,10 @@ func (p *pasteService) Update(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(responses.NewNotFoundError("paste not found"))
 	}
 
-	bodyViolations := validators.AppValidatorInstance.Validate(body)
+	violations = validators.AppValidatorInstance.Validate(body)
 
-	if bodyViolations != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(bodyViolations)
+	if violations != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(violations)
 	}
 
 	if existed.Title != body.Title {
