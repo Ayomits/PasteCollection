@@ -75,7 +75,7 @@ func (p *pasteController) FindSinglePaste(c *fiber.Ctx) error {
 //	@Param			pagination[sort]		query		string				false	"Сортировка результатов"	default(DESC)
 //	@Param			pagination[startFrom]	query		int					false	"С какого айди начинать"	default(10)
 //	@Param			pagination[limit]		query		int					true	"Лимит результатов"			default(10)
-//	@Param			pagination[order]		query		int					false	"Сторона"					default(next)
+//	@Param			pagination[order]		query		string					false	"Сторона"					default(next)
 //	@Param			filter[search]			query		string				false	"Поиск по названию"
 //	@Param			filter[userId]			query		int					false	"Айди автора"
 //	@Param			filter[socialId]		query		string				false	"Айди в соц. сети"
