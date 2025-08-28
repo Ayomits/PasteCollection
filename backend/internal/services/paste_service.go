@@ -31,58 +31,6 @@ func NewPasteService(r repositories.PasteRepository) PasteService {
 	return &pasteService{pasteRepository: r}
 }
 
-func (p *pasteService) Count(c *fiber.Ctx) error {
-	queryObj, err := querymap.FromURLStringToStruct[dtos.PastesFilterDto](c.BaseURL() + c.OriginalURL())
-
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
-	}
-
-	violations := validators.AppValidatorInstance.Validate(queryObj)
-
-	if violations != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(responses.NewValidationError(violations.Message, violations.Violations))
-	}
-
-	count, err := p.pasteRepository.Count(queryObj)
-
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
-	}
-
-	return c.Status(fiber.StatusOK).JSON(responses.NewCountResponse(*count))
-}
-
-func (p *pasteService) Increment(c *fiber.Ctx) error {
-	id, err := strconv.Atoi(c.Params("id"))
-
-	if err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(responses.NewValidationError("Is not integer id", []responses.Violation{
-			*responses.NewViolation("Not integer", "id"),
-		}))
-	}
-
-	existed, err := p.pasteRepository.FindOne(&dtos.PastesFilterDto{
-		PasteId: &id,
-	})
-
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
-	}
-
-	if existed == nil {
-		return c.Status(fiber.StatusNotFound).JSON(responses.NewNotFoundError("Paste not existed"))
-	}
-
-	updated, err := p.pasteRepository.IncrementViews(id)
-
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
-	}
-
-	return c.Status(fiber.StatusOK).JSON(updated)
-}
-
 func (p *pasteService) Create(c *fiber.Ctx) error {
 	var body dtos.CreatePasteDto
 
@@ -122,34 +70,6 @@ func (p *pasteService) Create(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(newPaste)
-}
-
-func (p *pasteService) Delete(c *fiber.Ctx) error {
-	queryObj, err := querymap.FromURLStringToStruct[dtos.PastesFilterDto](c.BaseURL() + c.OriginalURL())
-
-	if err != nil {
-		log.Error(err)
-		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Failed to parse query..."))
-	}
-
-	if p.isEmptyFilter(queryObj) {
-		return c.Status(fiber.StatusBadRequest).JSON(responses.NewBadRequestError("Empty query parametrs"))
-	}
-
-	existed, err := p.pasteRepository.FindOne(queryObj)
-
-	if existed == nil {
-		return c.Status(fiber.StatusNotFound).JSON(responses.NewBadRequestError("Paste not found"))
-	}
-
-	_, err = p.pasteRepository.Delete(queryObj)
-
-	if err != nil {
-		log.Error(err)
-		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Error while quering db..."))
-	}
-
-	return c.SendStatus(fiber.StatusNoContent)
 }
 
 func (p *pasteService) Find(c *fiber.Ctx) error {
@@ -212,6 +132,68 @@ func (p *pasteService) Search(c *fiber.Ctx) error {
 	items := entries[:min(len(entries), limit)]
 
 	return c.Status(fiber.StatusOK).JSON(responses.NewPaginationResponse(&items, len(entries) > limit))
+}
+
+func (p *pasteService) Count(c *fiber.Ctx) error {
+	queryObj, err := querymap.FromURLStringToStruct[dtos.PastesFilterDto](c.BaseURL() + c.OriginalURL())
+
+	if err != nil {
+		log.Error(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
+	}
+
+	violations := validators.AppValidatorInstance.Validate(queryObj)
+
+	if violations != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(responses.NewValidationError(violations.Message, violations.Violations))
+	}
+
+	count, err := p.pasteRepository.Count(queryObj)
+
+	if err != nil {
+		log.Error(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(responses.NewCountResponse(*count))
+}
+
+func (p *pasteService) Delete(c *fiber.Ctx) error {
+	queryObj, err := querymap.FromURLStringToStruct[dtos.PastesFilterDto](c.BaseURL() + c.OriginalURL())
+
+	if err != nil {
+		log.Error(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Failed to parse query..."))
+	}
+
+	violations := validators.AppValidatorInstance.Validate(queryObj)
+	if violations != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(violations)
+	}
+
+	if p.isEmptyFilter(queryObj) {
+		return c.Status(fiber.StatusBadRequest).JSON(responses.NewBadRequestError("Empty query parametrs"))
+	}
+
+	existed, err := p.pasteRepository.FindOne(queryObj)
+
+	if err != nil {
+		log.Error(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
+	}
+
+	if existed == nil {
+		return c.Status(fiber.StatusNotFound).JSON(responses.NewNotFoundError("Paste not found"))
+	}
+
+	_, err = p.pasteRepository.Delete(queryObj)
+
+	if err != nil {
+		log.Error(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Error while quering db..."))
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
 }
 
 func (p *pasteService) Update(c *fiber.Ctx) error {
@@ -282,6 +264,36 @@ func (p *pasteService) Update(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(newPaste)
+}
+
+func (p *pasteService) Increment(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+
+	if err != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(responses.NewValidationError("Is not integer id", []responses.Violation{
+			*responses.NewViolation("Not integer", "id"),
+		}))
+	}
+
+	existed, err := p.pasteRepository.FindOne(&dtos.PastesFilterDto{
+		PasteId: &id,
+	})
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
+	}
+
+	if existed == nil {
+		return c.Status(fiber.StatusNotFound).JSON(responses.NewNotFoundError("Paste not existed"))
+	}
+
+	updated, err := p.pasteRepository.IncrementViews(id)
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(updated)
 }
 
 func (p *pasteService) isEmptyFilter(filter *dtos.PastesFilterDto) bool {

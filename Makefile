@@ -31,6 +31,15 @@ up:
 restart:
 	docker compose restart
 
+restart_backend:
+	docker compose restart pastcollection-backend
+
+restart_bot:
+	docker compose restart pastcollection-bot
+
+restart_postgres:
+	docker compose restart pastcollection-postgres
+
 build_docker: init_var
 	docker compose build --no-cache
 
