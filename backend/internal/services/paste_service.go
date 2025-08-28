@@ -181,14 +181,14 @@ func (p *pasteService) Search(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Failed to parse query..."))
 	}
 
-	existed, err := p.pasteRepository.FindMany(queryObj.Filter, queryObj.Pagination)
+	entries, err := p.pasteRepository.FindMany(queryObj.Filter, queryObj.Pagination)
 
 	if err != nil {
 		log.Error(err)
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Error while quering db..."))
 	}
 
-	if existed == nil {
+	if entries == nil {
 		return c.Status(fiber.StatusNotFound).JSON(responses.NewBadRequestError("Paste not found"))
 	}
 
@@ -198,9 +198,9 @@ func (p *pasteService) Search(c *fiber.Ctx) error {
 		limit = *queryObj.Pagination.Limit
 	}
 
-	existed = existed[0:limit]
+	items := entries[0:limit]
 
-	return c.Status(fiber.StatusOK).JSON(responses.NewPaginationResponse(&existed, len(existed) > limit))
+	return c.Status(fiber.StatusOK).JSON(responses.NewPaginationResponse(&items, len(entries) > limit))
 }
 
 func (p *pasteService) Update(c *fiber.Ctx) error {
