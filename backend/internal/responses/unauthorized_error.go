@@ -5,12 +5,12 @@ type UnauthorizedError struct {
 }
 
 func NewUnauthorizedError(err ...string) *UnauthorizedError {
-    if len(err) > 0 {
-        return &UnauthorizedError{
-            Message: err[0],
-        }
-    }
-    return &UnauthorizedError{
-        Message: "Unauthorized",
-    }
+	if len(err) > 0 {
+		return &UnauthorizedError{
+			Message: err[0],
+		}
+	}
+	return &UnauthorizedError{
+		Message: "Unauthorized",
+	}
 }

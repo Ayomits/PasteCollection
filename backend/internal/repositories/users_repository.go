@@ -20,7 +20,7 @@ const (
 )
 
 type UserRepository interface {
-	Create(dto *dtos.UserDto) (*models.UserModel, error)
+	Create(dto *dtos.CreateUserDto) (*models.UserModel, error)
 	Find(filter *dtos.UserFiltersDto) (*models.UserModel, error)
 	Update(filter *dtos.UserFiltersDto, dto *dtos.UpdateUserDto) (*models.UserModel, error)
 	Delete(filter *dtos.UserFiltersDto) (bool, error)
@@ -56,7 +56,7 @@ func (u *userRepository) Find(filter *dtos.UserFiltersDto) (*models.UserModel, e
 	return &usr, nil
 }
 
-func (u *userRepository) Create(dto *dtos.UserDto) (*models.UserModel, error) {
+func (u *userRepository) Create(dto *dtos.CreateUserDto) (*models.UserModel, error) {
 	var usr models.UserModel
 
 	err := u.pool.QueryRow(context.Background(), CreateUserSql, &dto.Username, &dto.DisplayName, &dto.SocialId).Scan(

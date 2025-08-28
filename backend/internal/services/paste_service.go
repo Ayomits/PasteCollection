@@ -84,7 +84,7 @@ func (p *pasteService) Increment(c *fiber.Ctx) error {
 }
 
 func (p *pasteService) Create(c *fiber.Ctx) error {
-	var body dtos.PasteDto
+	var body dtos.CreatePasteDto
 
 	if err := c.BodyParser(&body); err != nil {
 		log.Error(err)

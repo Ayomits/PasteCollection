@@ -1,12 +1,13 @@
 package querymap
 
 import (
-	"github.com/mitchellh/mapstructure"
-	"golang.org/x/exp/maps"
 	"net/url"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/mitchellh/mapstructure"
+	"golang.org/x/exp/maps"
 )
 
 // anyList - type for storing a slice of arbitrary elements.

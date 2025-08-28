@@ -7,7 +7,10 @@ import (
 	"api/internal/repositories"
 	"api/internal/services"
 
+	"github.com/gofiber/swagger"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -18,6 +21,9 @@ func NewFiberApp() *fiber.App {
 
 	app.Use(logger.New())
 	app.Use(recover.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+	}))
 
 	return app
 }
@@ -30,24 +36,26 @@ func ConnectRoutes(app *fiber.App) {
 		panic("Db is not connected")
 	}
 
-	api := app.Group("/api").Use(middlewares.New(configService))
+	api := app.Group("/api")
 
-	users := api.Group("/users")
+	api.Get("/swagger/*", swagger.HandlerDefault)
+
+	users := api.Group("/users").Use(middlewares.NewInternalTokenMiddleware(configService))
 	userRepository := repositories.NewUserRepository(db)
 	userService := services.NewUserService(userRepository)
 	userController := controllers.NewUserController(userService)
 
-	users.Get("/", userController.Find)
-	users.Post("/", userController.Create)
-	users.Put("/", userController.Update)
-	users.Delete("/", userController.Delete)
+	users.Get("/", userController.FindUser)
+	users.Post("/", userController.CreateUser)
+	users.Put("/", userController.UpdateUser)
+	users.Delete("/", userController.DeleteUser)
 
-	pastes := api.Group("/pastes")
+	pastes := api.Group("/pastes").Use(middlewares.NewInternalTokenMiddleware(configService))
 	pasteRepository := repositories.NewPasteRepository(db)
 	pasteService := services.NewPasteService(pasteRepository)
 	pasteController := controllers.NewPasteController(pasteService)
 
-	pastes.Get("/", pasteController.FindPaste)
+	pastes.Get("/", pasteController.FindSinglePaste)
 	pastes.Get("/count", pasteController.Count)
 	pastes.Get("/search", pasteController.SearchPaste)
 	pastes.Post("/", pasteController.CreatePaste)

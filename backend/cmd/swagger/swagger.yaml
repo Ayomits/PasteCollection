@@ -1,0 +1,727 @@
+definitions:
+  dtos.CreatePasteDto:
+    properties:
+      paste:
+        maxLength: 2096
+        minLength: 1
+        type: string
+      title:
+        maxLength: 32
+        minLength: 1
+        type: string
+      userId:
+        minimum: 1
+        type: integer
+    required:
+    - paste
+    - title
+    - userId
+    type: object
+  dtos.CreateUserDto:
+    properties:
+      displayName:
+        maxLength: 64
+        minLength: 1
+        type: string
+      socialId:
+        maxLength: 255
+        minLength: 1
+        type: string
+      username:
+        maxLength: 32
+        minLength: 1
+        type: string
+    required:
+    - displayName
+    - socialId
+    - username
+    type: object
+  dtos.UpdatePasteDto:
+    properties:
+      paste:
+        maxLength: 2096
+        minLength: 1
+        type: string
+      title:
+        maxLength: 32
+        minLength: 1
+        type: string
+    required:
+    - paste
+    - title
+    type: object
+  dtos.UpdateUserDto:
+    properties:
+      displayName:
+        maxLength: 64
+        minLength: 1
+        type: string
+      username:
+        maxLength: 32
+        minLength: 1
+        type: string
+    required:
+    - displayName
+    - username
+    type: object
+  models.PasteModel:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: integer
+      paste:
+        type: string
+      title:
+        type: string
+      updatedAt:
+        type: string
+      userId:
+        type: integer
+      views:
+        type: integer
+    type: object
+  models.UserModel:
+    properties:
+      createdAt:
+        type: string
+      displayName:
+        type: string
+      id:
+        type: integer
+      socialId:
+        type: string
+      updatedAt:
+        type: string
+      username:
+        type: string
+    type: object
+  responses.CountResponse:
+    properties:
+      count:
+        type: integer
+    type: object
+  responses.InternalError:
+    properties:
+      message:
+        type: string
+    type: object
+  responses.NotFoundError:
+    properties:
+      message:
+        type: string
+    type: object
+  responses.UnauthorizedError:
+    properties:
+      message:
+        type: string
+    type: object
+  responses.ValidationError:
+    properties:
+      message:
+        type: string
+      violations:
+        items:
+          $ref: '#/definitions/responses.Violation'
+        type: array
+    type: object
+  responses.Violation:
+    properties:
+      message:
+        type: string
+      propertyPath:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Апишка для моего личного бота для коллекционирования паст
+  title: Pastes API
+  version: "1.0"
+paths:
+  /api/pastes:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет пасту по указанному фильтру
+      parameters:
+      - description: Поиск по названию
+        in: query
+        name: search
+        type: string
+      - description: Айди автора
+        in: query
+        name: userId
+        type: integer
+      - description: Айди в соц. сети
+        in: query
+        name: socialId
+        type: string
+      - description: Айди пасты
+        in: query
+        name: pasteId
+        type: integer
+      - default: false
+        description: Строгое или нестрогое совпадение в названии
+        in: query
+        name: strict
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.UnauthorizedError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.NotFoundError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/responses.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.InternalError'
+      security:
+      - ApiKeyAuth: []
+      summary: Удалить пасту
+      tags:
+      - Pastes
+    get:
+      consumes:
+      - application/json
+      description: Возвращает пасту по указанному фильтру
+      parameters:
+      - description: Поиск по названию
+        in: query
+        name: search
+        type: string
+      - description: Айди автора
+        in: query
+        name: userId
+        type: integer
+      - description: Айди в соц. сети
+        in: query
+        name: socialId
+        type: string
+      - description: Айди пасты
+        in: query
+        name: pasteId
+        type: integer
+      - default: false
+        description: Строгое или нестрогое совпадение в названии
+        in: query
+        name: strict
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Найденная паста
+          schema:
+            $ref: '#/definitions/models.PasteModel'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.UnauthorizedError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.NotFoundError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/responses.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.InternalError'
+      security:
+      - ApiKeyAuth: []
+      summary: Найти одну пасту по фильтру
+      tags:
+      - Pastes
+    post:
+      consumes:
+      - application/json
+      description: Создает новую пасту с указанным содержимым
+      parameters:
+      - description: Данные пасты
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.CreatePasteDto'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Созданная паста
+          schema:
+            $ref: '#/definitions/models.PasteModel'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.UnauthorizedError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/responses.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.InternalError'
+      security:
+      - ApiKeyAuth: []
+      summary: Создать новую пасту
+      tags:
+      - Pastes
+    put:
+      consumes:
+      - application/json
+      description: Обновляет содержимое пасты
+      parameters:
+      - description: Поиск по названию
+        in: query
+        name: search
+        type: string
+      - description: Айди автора
+        in: query
+        name: userId
+        type: integer
+      - description: Айди в соц. сети
+        in: query
+        name: socialId
+        type: string
+      - description: Айди пасты
+        in: query
+        name: pasteId
+        type: integer
+      - default: false
+        description: Строгое или нестрогое совпадение в названии
+        in: query
+        name: strict
+        type: boolean
+      - description: Данные для обновления
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.UpdatePasteDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обновленная паста
+          schema:
+            $ref: '#/definitions/models.PasteModel'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.UnauthorizedError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.NotFoundError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/responses.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.InternalError'
+      security:
+      - ApiKeyAuth: []
+      summary: Обновить пасту
+      tags:
+      - Pastes
+  /api/pastes/{id}/increment:
+    patch:
+      consumes:
+      - application/json
+      description: Увеличивает счетчик просмотров для конкретной пасты
+      parameters:
+      - description: ID пасты
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обновленная паста
+          schema:
+            $ref: '#/definitions/models.PasteModel'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.UnauthorizedError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/responses.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.InternalError'
+      security:
+      - ApiKeyAuth: []
+      summary: Увеличить счетчик просмотров
+      tags:
+      - Pastes
+  /api/pastes/count:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает общее количество паст в системе
+      parameters:
+      - description: Поиск по названию
+        in: query
+        name: search
+        type: string
+      - description: Айди автора
+        in: query
+        name: userId
+        type: integer
+      - description: Айди в соц. сети
+        in: query
+        name: socialId
+        type: string
+      - description: Айди пасты
+        in: query
+        name: pasteId
+        type: integer
+      - default: false
+        description: Строгое или нестрогое совпадение в названии
+        in: query
+        name: strict
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Количество паст
+          schema:
+            $ref: '#/definitions/responses.CountResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.UnauthorizedError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/responses.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.InternalError'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить количество паст
+      tags:
+      - Pastes
+  /api/pastes/search:
+    get:
+      consumes:
+      - application/json
+      description: Поиск паст по различным критериям
+      parameters:
+      - default: '"DESC"'
+        description: Сортировка результатов
+        in: query
+        name: pagination[sort]
+        type: string
+      - default: 10
+        description: С какого айди начинать
+        in: query
+        name: pagination[startFrom]
+        type: integer
+      - default: 10
+        description: Лимит результатов
+        in: query
+        name: pagination[limit]
+        required: true
+        type: integer
+      - description: Сторона
+        in: query
+        name: pagination[order]
+        type: integer
+      - description: Поиск по названию
+        in: query
+        name: filter[search]
+        type: string
+      - description: Айди автора
+        in: query
+        name: filter[userId]
+        type: integer
+      - description: Айди в соц. сети
+        in: query
+        name: filter[socialId]
+        type: string
+      - description: Айди пасты
+        in: query
+        name: filter[pasteId]
+        type: integer
+      - default: false
+        description: Строгое или нестрогое совпадение в названии
+        in: query
+        name: filter[strict]
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список найденных паст
+          schema:
+            items:
+              $ref: '#/definitions/models.PasteModel'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.UnauthorizedError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/responses.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.InternalError'
+      security:
+      - ApiKeyAuth: []
+      summary: Поиск паст
+      tags:
+      - Pastes
+  /api/users:
+    delete:
+      consumes:
+      - application/json
+      description: Удалит пользователя или вернёт 404
+      parameters:
+      - description: ID пользователя
+        in: query
+        name: id
+        type: integer
+      - description: Уникальное имя
+        in: query
+        name: username
+        type: string
+      - description: Отображаемое имя
+        in: query
+        name: displayName
+        type: string
+      - description: Айди в соц. сети
+        in: query
+        name: socialId
+        type: string
+      - default: false
+        description: Если в true, тогда будет условие AND
+        in: query
+        name: matchAll
+        type: boolean
+      - default: false
+        description: Если в true, тогда строгое сравнение
+        in: query
+        name: strict
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserModel'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.UnauthorizedError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.NotFoundError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/responses.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.InternalError'
+      security:
+      - ApiKeyAuth: []
+      summary: Удалить пользователя
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      description: Найдёт пользователя по фильтру или вернёт 404
+      parameters:
+      - description: ID пользователя
+        in: query
+        name: id
+        type: integer
+      - description: Уникальное имя
+        in: query
+        name: username
+        type: string
+      - description: Отображаемое имя
+        in: query
+        name: displayName
+        type: string
+      - description: Айди в соц. сети
+        in: query
+        name: socialId
+        type: string
+      - default: false
+        description: Если в true, тогда будет условие AND
+        in: query
+        name: matchAll
+        type: boolean
+      - default: false
+        description: Если в true, тогда строгое сравнение
+        in: query
+        name: strict
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserModel'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.UnauthorizedError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.NotFoundError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/responses.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.InternalError'
+      security:
+      - ApiKeyAuth: []
+      summary: Найти пользователя по фильтру
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Создаст пользователя или вернёт 422
+      parameters:
+      - description: Данные юзера
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.CreateUserDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserModel'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.UnauthorizedError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/responses.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.InternalError'
+      security:
+      - ApiKeyAuth: []
+      summary: Создать пользователя
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Обновит пользователя или вернёт 404, 422
+      parameters:
+      - description: ID пользователя
+        in: query
+        name: id
+        type: integer
+      - description: Уникальное имя
+        in: query
+        name: username
+        type: string
+      - description: Отображаемое имя
+        in: query
+        name: displayName
+        type: string
+      - description: Айди в соц. сети
+        in: query
+        name: socialId
+        type: string
+      - default: false
+        description: Если в true, тогда будет условие AND
+        in: query
+        name: matchAll
+        type: boolean
+      - default: false
+        description: Если в true, тогда строгое сравнение
+        in: query
+        name: strict
+        type: boolean
+      - description: Данные юзера
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.UpdateUserDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserModel'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.UnauthorizedError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.NotFoundError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/responses.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.InternalError'
+      security:
+      - ApiKeyAuth: []
+      summary: Обновит пользователя
+      tags:
+      - users
+securityDefinitions:
+  ApiKeyAuth:
+    description: API Key authentication without Bearer prefix
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

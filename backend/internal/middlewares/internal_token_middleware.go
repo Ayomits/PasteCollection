@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func New(configService services.ConfigService) fiber.Handler {
+func NewInternalTokenMiddleware(configService services.ConfigService) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		headers := ctx.GetReqHeaders()
 		token_from_env, err := configService.Get("SECRET_API_TOKEN")

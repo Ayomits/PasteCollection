@@ -52,7 +52,7 @@ func (u *userService) Find(c *fiber.Ctx) error {
 }
 
 func (u *userService) Create(c *fiber.Ctx) error {
-	var body *dtos.UserDto
+	var body *dtos.CreateUserDto
 
 	if err := c.BodyParser(&body); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(responses.NewInternalError("Cannot parse body..."))

@@ -26,7 +26,7 @@ type PasteRepository interface {
 	FindOne(filter *dtos.PastesFilterDto) (*models.PasteModel, error)
 	FindMany(filter *dtos.PastesFilterDto, pagination *dtos.PaginationDto) ([]*models.PasteModel, error)
 	Count(filter *dtos.PastesFilterDto) (*int, error)
-	Create(dto *dtos.PasteDto) (*models.PasteModel, error)
+	Create(dto *dtos.CreatePasteDto) (*models.PasteModel, error)
 	Update(filter *dtos.PastesFilterDto, dto *dtos.UpdatePasteDto) (*models.PasteModel, error)
 	IncrementViews(pasteId int) (*models.PasteModel, error)
 	Delete(filter *dtos.PastesFilterDto) (bool, error)
@@ -137,7 +137,7 @@ func (p *pasteRepository) Count(filter *dtos.PastesFilterDto) (*int, error) {
 	return &rowCount, nil
 }
 
-func (p *pasteRepository) Create(dto *dtos.PasteDto) (*models.PasteModel, error) {
+func (p *pasteRepository) Create(dto *dtos.CreatePasteDto) (*models.PasteModel, error) {
 	var paste models.PasteModel
 
 	err := p.pool.QueryRow(context.Background(), CreatePasteSql, dto.Title, dto.Paste, dto.UserId).Scan(

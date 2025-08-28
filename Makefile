@@ -13,8 +13,11 @@ update_app:
 	docker exec -it pastcollection-backend go install github.com/swaggo/swag/cmd/swag@latest
 	docker exec -it pastcollection-backend go mod vendor
 
-swagger_init:
+swag_init:
 	docker exec -it pastcollection-backend ./scripts/swag.sh
+
+swag_fmt:
+	docker exec -it pastcollection-backend ./scripts/swag_fmt.sh
 
 init_var:
 	mkdir -p ./var/storage/postgres_data
