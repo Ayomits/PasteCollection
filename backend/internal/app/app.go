@@ -38,7 +38,7 @@ func ConnectRoutes(app *fiber.App) {
 
 	api := app.Group("/api")
 
-	api.Get("/swagger/*", swagger.HandlerDefault)
+	api.Get("/docs/*", swagger.HandlerDefault)
 
 	users := api.Group("/users").Use(middlewares.NewInternalTokenMiddleware(configService))
 	userRepository := repositories.NewUserRepository(db)
