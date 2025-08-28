@@ -72,7 +72,7 @@ func (p *pasteController) FindSinglePaste(c *fiber.Ctx) error {
 //	@Tags			Pastes
 //	@Accept			json
 //	@Produce		json
-//	@Param			pagination[sort]		query		string				false	"Сортировка результатов"	default("DESC")
+//	@Param			pagination[sort]		query		string				false	"Сортировка результатов"	default(DESC)
 //	@Param			pagination[startFrom]	query		int					false	"С какого айди начинать"	default(10)
 //	@Param			pagination[limit]		query		int					true	"Лимит результатов"			default(10)
 //	@Param			pagination[order]		query		int					false	"Сторона"					default(next)
