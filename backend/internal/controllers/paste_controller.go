@@ -56,6 +56,7 @@ func (p *pasteController) CreatePaste(c *fiber.Ctx) error {
 //	@Param			pasteId		query		int					false	"Айди пасты"
 //	@Param			strict		query		bool				false	"Строгое или нестрогое совпадение в названии"	default(false)
 //	@Success		200			{object}	models.PasteModel	"Найденная паста"
+//	@Failure		400			{object}	responses.BadRequestError
 //	@Failure		404			{object}	responses.NotFoundError
 //	@Failure		401			{object}	responses.UnauthorizedError
 //	@Failure		422			{object}	responses.ValidationError
@@ -131,6 +132,7 @@ func (p *pasteController) Count(c *fiber.Ctx) error {
 //	@Param			strict		query		bool				false	"Строгое или нестрогое совпадение в названии"	default(false)
 //	@Param			request		body		dtos.UpdatePasteDto	true	"Данные для обновления"
 //	@Success		200			{object}	models.PasteModel	"Обновленная паста"
+//	@Failure		400			{object}	responses.BadRequestError
 //	@Failure		404			{object}	responses.NotFoundError
 //	@Failure		401			{object}	responses.UnauthorizedError
 //	@Failure		422			{object}	responses.ValidationError
@@ -151,6 +153,7 @@ func (p *pasteController) UpdatePaste(c *fiber.Ctx) error {
 //	@Produce					json
 //	@securitydefinitions.apikey	ApiKeyAuth
 //	@Success					200	{object}	models.PasteModel	"Обновленная паста"
+//	@Failure					400	{object}	responses.BadRequestError
 //	@Failure					401	{object}	responses.UnauthorizedError
 //	@Failure					422	{object}	responses.ValidationError
 //	@Failure					429	{object}	responses.RateLimitError
@@ -175,6 +178,7 @@ func (p *pasteController) Increment(c *fiber.Ctx) error {
 //	@Param			pasteId		query	int		false	"Айди пасты"
 //	@Param			strict		query	bool	false	"Строгое или нестрогое совпадение в названии"	default(false)
 //	@Success		204
+//	@Failure		400	{object}	responses.BadRequestError
 //	@Failure		401	{object}	responses.UnauthorizedError
 //	@Failure		404	{object}	responses.NotFoundError
 //	@Failure		422	{object}	responses.ValidationError

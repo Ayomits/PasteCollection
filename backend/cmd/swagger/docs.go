@@ -73,6 +73,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/models.PasteModel"
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/responses.BadRequestError"
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -169,6 +175,12 @@ const docTemplate = `{
                         "description": "Обновленная паста",
                         "schema": {
                             "$ref": "#/definitions/models.PasteModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/responses.BadRequestError"
                         }
                     },
                     "401": {
@@ -317,6 +329,12 @@ const docTemplate = `{
                 "responses": {
                     "204": {
                         "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/responses.BadRequestError"
+                        }
                     },
                     "401": {
                         "description": "Unauthorized",
@@ -585,6 +603,12 @@ const docTemplate = `{
                         "description": "Обновленная паста",
                         "schema": {
                             "$ref": "#/definitions/models.PasteModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/responses.BadRequestError"
                         }
                     },
                     "401": {
@@ -1108,6 +1132,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "responses.BadRequestError": {
+            "type": "object",
+            "properties": {
+                "message": {
                     "type": "string"
                 }
             }

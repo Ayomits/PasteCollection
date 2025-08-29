@@ -96,6 +96,11 @@ definitions:
       username:
         type: string
     type: object
+  responses.BadRequestError:
+    properties:
+      message:
+        type: string
+    type: object
   responses.CountResponse:
     properties:
       count:
@@ -175,6 +180,10 @@ paths:
       responses:
         "204":
           description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.BadRequestError'
         "401":
           description: Unauthorized
           schema:
@@ -233,6 +242,10 @@ paths:
           description: Найденная паста
           schema:
             $ref: '#/definitions/models.PasteModel'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.BadRequestError'
         "401":
           description: Unauthorized
           schema:
@@ -336,6 +349,10 @@ paths:
           description: Обновленная паста
           schema:
             $ref: '#/definitions/models.PasteModel'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.BadRequestError'
         "401":
           description: Unauthorized
           schema:
@@ -379,6 +396,10 @@ paths:
           description: Обновленная паста
           schema:
             $ref: '#/definitions/models.PasteModel'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.BadRequestError'
         "401":
           description: Unauthorized
           schema:
