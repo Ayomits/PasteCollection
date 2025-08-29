@@ -15,9 +15,9 @@ import (
 // @host						localhost:8080
 // @BasePath					/
 func main() {
-	fiber := app.NewFiberApp()
+	engine := app.NewFiberApp()
 
-	app.ConnectRoutes(fiber)
+	app.ConnectRoutes(engine)
 
-	fiber.Listen(":8080")
+	engine.Listen(":8080")
 }
